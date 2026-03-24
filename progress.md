@@ -40,8 +40,10 @@
   - `tools/multimodal_retrieval/README.md`
 - Added execution-prep assets:
   - `docs/multimodal_retrieval/training_recipe.md`
+  - `docs/multimodal_retrieval/data_collection_playbook.md`
   - `tools/multimodal_retrieval/check_idle_gpus.py`
   - `tools/multimodal_retrieval/create_conda_env.sh`
+  - `tools/multimodal_retrieval/download_public_data.sh`
   - `tools/multimodal_retrieval/environment.yml`
 - Hardened example training scripts so shared-GPU runs require explicit `CUDA_VISIBLE_DEVICES`.
 - Updated example docs and eval config to reflect the new media-root and video-input support.

@@ -71,6 +71,18 @@ python tools/multimodal_retrieval/check_idle_gpus.py
 
 Use these to create an isolated runtime instead of installing into the local `base` environment.
 
+### `download_public_data.sh`
+
+Prepare public MMEB/VLM2Vec sources under a consistent raw-data layout.
+
+By default it runs in dry-run mode:
+
+```bash
+DATA_ROOT=/path/to/storage \
+DRY_RUN=1 \
+bash tools/multimodal_retrieval/download_public_data.sh
+```
+
 ### `validate_stack.sh`
 
 Run syntax checks, multimodal tests, inventory export, and conversion smoke tests:
