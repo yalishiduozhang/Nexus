@@ -1,66 +1,64 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DATA_ROOT="${DATA_ROOT:-$PWD/data}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+PYTHON_BIN="${PYTHON_BIN:-python}"
+DATA_ROOT="${DATA_ROOT:-$REPO_ROOT/data}"
 RAW_ROOT="${RAW_ROOT:-$DATA_ROOT/raw}"
-DOWNLOAD_TRAIN="${DOWNLOAD_TRAIN:-1}"
-DOWNLOAD_EVAL="${DOWNLOAD_EVAL:-1}"
+NEXUS_ROOT="${NEXUS_ROOT:-$DATA_ROOT/nexus}"
+MANIFEST="${MANIFEST:-$REPO_ROOT/docs/multimodal_retrieval/MMEB_v2_manifest.json}"
+TRAIN_MODALITY="${TRAIN_MODALITY:-image}"
+SOURCE_NAMES="${SOURCE_NAMES:-}"
+SKIP_MEDIA="${SKIP_MEDIA:-0}"
+DOWNLOAD="${DOWNLOAD:-0}"
+CONVERT_TRAIN="${CONVERT_TRAIN:-0}"
+EXTRACT_ARCHIVES="${EXTRACT_ARCHIVES:-0}"
 DRY_RUN="${DRY_RUN:-1}"
+MAX_ROWS="${MAX_ROWS:-}"
 
-TRAIN_ROOT="${RAW_ROOT}/vlm2vec_train"
-EVAL_ROOT="${RAW_ROOT}/vlm2vec_eval"
+ARGS=(
+  "--manifest" "$MANIFEST"
+  "--raw-root" "$RAW_ROOT"
+  "--nexus-root" "$NEXUS_ROOT"
+  "--python-bin" "$PYTHON_BIN"
+)
 
-run_cmd() {
-  echo "+ $*"
-  if [[ "${DRY_RUN}" != "1" ]]; then
-    "$@"
-  fi
-}
+IFS=',' read -r -a MODALITIES <<< "$TRAIN_MODALITY"
+for modality in "${MODALITIES[@]}"; do
+  [[ -n "$modality" ]] || continue
+  ARGS+=("--train-modality" "$modality")
+done
 
-clone_hf_git_lfs_repo() {
-  local repo_url="$1"
-  local target_dir="$2"
+IFS=',' read -r -a SOURCES <<< "$SOURCE_NAMES"
+for source_name in "${SOURCES[@]}"; do
+  [[ -n "$source_name" ]] || continue
+  ARGS+=("--source-name" "$source_name")
+done
 
-  if [[ -d "${target_dir}/.git" ]]; then
-    echo "Repo already exists: ${target_dir}"
-    return 0
-  fi
-
-  run_cmd git clone "${repo_url}" "${target_dir}"
-  if [[ -d "${target_dir}/.git" ]]; then
-    (
-      cd "${target_dir}"
-      run_cmd git lfs pull
-    )
-  fi
-}
-
-echo "DATA_ROOT=${DATA_ROOT}"
-echo "RAW_ROOT=${RAW_ROOT}"
-echo "DRY_RUN=${DRY_RUN}"
-
-mkdir -p "${TRAIN_ROOT}" "${EVAL_ROOT}"
-
-if [[ "${DOWNLOAD_TRAIN}" == "1" ]]; then
-  echo "== Training sources =="
-  clone_hf_git_lfs_repo "https://huggingface.co/datasets/TIGER-Lab/MMEB-train" "${TRAIN_ROOT}/MMEB-train"
-  clone_hf_git_lfs_repo "https://huggingface.co/datasets/ShareGPTVideo/train_video_and_instruction" "${TRAIN_ROOT}/ShareGPTVideo"
-  clone_hf_git_lfs_repo "https://huggingface.co/datasets/vidore/colpali_train_set" "${TRAIN_ROOT}/colpali_train_set"
-  clone_hf_git_lfs_repo "https://huggingface.co/datasets/openbmb/VisRAG-Ret-Train-In-domain-data" "${TRAIN_ROOT}/VisRAG-Ret-Train-In-domain-data"
-
-  echo "Post-processing reminders:"
-  echo "- MMEB-train may require running unzip helpers from the dataset repo."
-  echo "- ShareGPTVideo archives may need unpacking under train_300k / train_600k."
-  echo "- If needed, derive video_qa_240k.jsonl from video_240k_caption_15k.jsonl."
+if [[ "$SKIP_MEDIA" == "1" ]]; then
+  ARGS+=("--skip-media")
+fi
+if [[ "$DOWNLOAD" == "1" ]]; then
+  ARGS+=("--download")
+fi
+if [[ "$CONVERT_TRAIN" == "1" ]]; then
+  ARGS+=("--convert-train")
+fi
+if [[ "$EXTRACT_ARCHIVES" == "1" ]]; then
+  ARGS+=("--extract-archives")
+fi
+if [[ "$DRY_RUN" == "1" ]]; then
+  ARGS+=("--dry-run")
+fi
+if [[ -n "$MAX_ROWS" ]]; then
+  ARGS+=("--max-rows" "$MAX_ROWS")
 fi
 
-if [[ "${DOWNLOAD_EVAL}" == "1" ]]; then
-  echo "== Evaluation source =="
-  clone_hf_git_lfs_repo "https://huggingface.co/datasets/TIGER-Lab/MMEB-V2" "${EVAL_ROOT}/MMEB-V2"
+echo "PYTHON_BIN=$PYTHON_BIN"
+echo "RAW_ROOT=$RAW_ROOT"
+echo "NEXUS_ROOT=$NEXUS_ROOT"
+echo "TRAIN_MODALITY=$TRAIN_MODALITY"
+echo "SOURCE_NAMES=${SOURCE_NAMES:-<all>}"
+echo "DOWNLOAD=$DOWNLOAD CONVERT_TRAIN=$CONVERT_TRAIN SKIP_MEDIA=$SKIP_MEDIA EXTRACT_ARCHIVES=$EXTRACT_ARCHIVES DRY_RUN=$DRY_RUN"
 
-  echo "Post-processing reminders:"
-  echo "- unpack image, video, and visdoc archives before Nexus conversion"
-  echo "- preserve the raw folder layout for traceability"
-fi
-
-echo "Finished. Review storage usage before switching DRY_RUN=0."
+"$PYTHON_BIN" "$REPO_ROOT/tools/multimodal_retrieval/prepare_public_data.py" "${ARGS[@]}"

@@ -4,7 +4,6 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 
-from Nexus.evaluation.text_retrieval.utils import index, search
 from Nexus.inference.embedder.multimodal_retrieval import MultimodalEmbedder
 
 
@@ -41,6 +40,8 @@ class MultimodalRetrievalEvalDenseRetriever(MultimodalRetrievalEvalRetriever):
         ignore_identical_ids: bool = False,
         **kwargs,
     ):
+        from Nexus.evaluation.text_retrieval.utils import index, search
+
         corpus_ids = list(corpus.keys())
         query_ids = list(queries.keys())
 

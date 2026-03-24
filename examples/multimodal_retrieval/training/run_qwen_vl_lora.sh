@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+TORCHRUN_BIN="${TORCHRUN_BIN:-torchrun}"
 MODEL_NAME_OR_PATH="${MODEL_NAME_OR_PATH:-Qwen/Qwen2.5-VL-3B-Instruct}"
-TRAIN_DATA="${TRAIN_DATA:-./data/train.jsonl}"
-OUTPUT_DIR="${OUTPUT_DIR:-./outputs/mm_embedder_qwen25vl_lora}"
+TRAIN_DATA="${TRAIN_DATA:-${REPO_ROOT}/examples/multimodal_retrieval/data/train.jsonl}"
+OUTPUT_DIR="${OUTPUT_DIR:-${REPO_ROOT}/outputs/mm_embedder_qwen25vl_lora}"
+
+cd "${REPO_ROOT}"
 
 if [[ "${REQUIRE_EXPLICIT_GPUS:-1}" == "1" && -z "${CUDA_VISIBLE_DEVICES:-}" ]]; then
   echo "Set CUDA_VISIBLE_DEVICES to idle GPUs only before training."
@@ -13,7 +17,7 @@ fi
 
 echo "Using CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
 
-torchrun --nproc_per_node="${NPROC_PER_NODE:-1}" \
+"${TORCHRUN_BIN}" --nproc_per_node="${NPROC_PER_NODE:-1}" \
   -m Nexus.training.embedder.multimodal_retrieval \
   --model_name_or_path "${MODEL_NAME_OR_PATH}" \
   --processor_name_or_path "${MODEL_NAME_OR_PATH}" \

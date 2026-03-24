@@ -115,6 +115,7 @@ Expected contents:
 Use:
 
 - `tools/multimodal_retrieval/download_public_data.sh`
+- `tools/multimodal_retrieval/prepare_public_data.py`
 
 Recommended first pass:
 
@@ -129,6 +130,7 @@ Use:
 
 - `tools/multimodal_retrieval/convert_vlm2vec_train_to_nexus.py`
 - `tools/multimodal_retrieval/convert_vlm2vec_eval_to_nexus.py`
+- `tools/multimodal_retrieval/prepare_mmeb_v2_train_data.py`
 
 Recommended outputs:
 
@@ -167,6 +169,8 @@ Prepared in this repository:
 - human-readable MMEB v2 inventory
 - machine-readable MMEB v2 manifest
 - Nexus conversion scripts
+- HF HTTP planning and selective download tooling
+- stage-oriented train-data preparation tooling
 - validation script
 - GPU-safety helper
 

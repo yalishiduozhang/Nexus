@@ -1,6 +1,6 @@
 # Multimodal Embedding Plan
 
-Last updated: 2026-03-24
+Last updated: 2026-03-25
 
 ## Objective
 
@@ -30,6 +30,15 @@ Done:
 - Added a first multimodal retrieval pipeline to Nexus for training, inference, and evaluation.
 - Added example configs and scripts under `examples/multimodal_retrieval/`.
 - Confirmed the repo is already under git and local progress is traceable from the original Nexus history.
+- Added config-file entrypoints for multimodal training and evaluation so split JSON configs can drive the CLI.
+- Added a bundled local smoke dataset under `examples/multimodal_retrieval/data/`.
+- Added manifest-aware public-data tooling for selective HF download and train-data preparation:
+  - `vlm2vec_manifest_lib.py`
+  - `hf_dataset_manager.py`
+  - `prepare_public_data.py`
+  - `prepare_mmeb_v2_train_data.py`
+- Regenerated the machine-readable MMEB v2 manifest so it now records separate metadata/media sources and train download patterns.
+- Verified one real public-data smoke path by downloading and converting the `HatefulMemes` MMEB-train subset into Nexus JSONL.
 
 In progress:
 
@@ -40,11 +49,13 @@ In progress:
   - evaluation media root overrides
   - multi-device embedding inference
 - Building reusable data tooling so MMEB/VLM2Vec style data can be converted into Nexus-native formats.
+- Converting the public-data tooling from checklist-level docs into executable manifest-driven workflows.
+- Preparing staged Nexus `data_config.json` assets from converted public train sources.
 
 Not started yet:
 
-- environment-specific training runs
-- large-scale data download and curation
+- environment-specific GPU training runs
+- storage-managed large-scale data download and curation
 - model training and leaderboard verification
 
 ## Milestones
@@ -103,6 +114,7 @@ Scope:
 - isolate runtime environment
 - choose LoRA/full finetune strategy
 - prepare staged curriculum across image, video, visdoc data
+- generate stage-specific data configs from converted Nexus train JSONL
 
 Exit criteria:
 
@@ -127,17 +139,18 @@ Exit criteria:
 
 ## Immediate Next Steps
 
-1. Finish the MMEB v2 readiness pass and commit it as the second local milestone.
-2. Finish conversion scripts for train and eval data.
-3. Freeze a public-data inventory and collection checklist for the teammate handling data gathering.
-4. Prepare isolated training environments instead of modifying the local base environment.
-5. Before any GPU job, inspect current GPU occupancy and use only idle devices.
+1. Keep the generated manifest and inventory docs in sync with the actual helper tools.
+2. Expand the real public-data smoke run from one MMEB image subset to a broader Stage A mixture.
+3. Prepare isolated training environments instead of modifying the local base environment.
+4. Launch a smoke finetune only after selecting idle GPUs explicitly.
+5. Move from smoke conversion into staged local evaluation and per-modality error analysis.
 
 ## Risks And Dependencies
 
 - Training and evaluation depend on a clean isolated environment with the right multimodal stack.
 - MMEB v2 data spans image, video, and visual-document tasks, so storage layout and media roots must stay configurable.
 - Video evaluation can be expensive and must not interfere with other users' jobs on shared GPUs.
+- Full public data collection is storage-heavy relative to the current machine, so selective download remains necessary until a larger storage target is prepared.
 - Final leaderboard claims depend on real training runs and benchmark execution, which are not yet completed in this repository.
 
 ## Working Rules

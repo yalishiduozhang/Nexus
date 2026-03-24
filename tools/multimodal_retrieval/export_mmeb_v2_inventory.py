@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
-"""Export an MMEB v2 inventory markdown report from the local VLM2Vec references."""
+"""Export an MMEB v2 inventory markdown report from local VLM2Vec references."""
 
 import argparse
-import ast
 import os
-import runpy
-from typing import Any, Dict
+import sys
+from typing import Any, Dict, Iterable, List
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
 
-def require_yaml():
-    try:
-        import yaml
-    except ImportError as exc:
-        raise ImportError(
-            "The inventory exporter requires `PyYAML`. Create an isolated environment and install Nexus dependencies there."
-        ) from exc
-    return yaml
+from vlm2vec_manifest_lib import build_eval_manifest_entries, build_train_manifest, load_vlm2vec_context
 
 
 def parse_args():
@@ -25,44 +20,20 @@ def parse_args():
     return parser.parse_args()
 
 
-def load_yaml(path: str) -> Dict[str, Any]:
-    yaml = require_yaml()
-    with open(path, "r", encoding="utf-8") as input_file:
-        return yaml.safe_load(input_file)
-
-
-def load_python_assignment(path: str, variable_name: str):
-    with open(path, "r", encoding="utf-8") as input_file:
-        tree = ast.parse(input_file.read(), filename=path)
-
-    for node in tree.body:
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == variable_name:
-                    return ast.literal_eval(node.value)
-    raise ValueError(f"Variable `{variable_name}` not found in {path}")
-
-
-def load_python_variable_via_runpy(path: str, variable_name: str):
-    namespace = runpy.run_path(path, init_globals={"__name__": "__nexus_inventory_loader__"})
-    if variable_name not in namespace:
-        raise ValueError(f"Variable `{variable_name}` not found in {path}")
-    return namespace[variable_name]
-
-
-def format_mapping_table(mapping: Dict[str, Any], value_headers):
+def format_mapping_table(rows: Iterable[Dict[str, Any]], columns: List[str]) -> List[str]:
     lines = []
-    header = "| Dataset | " + " | ".join(value_headers) + " |"
-    separator = "| --- | " + " | ".join(["---"] * len(value_headers)) + " |"
-    lines.extend([header, separator])
-    for dataset_name, values in mapping.items():
-        if isinstance(values, dict):
-            normalized_values = [str(values.get(column, "")) if values.get(column, "") is not None else "" for column in value_headers]
-        else:
-            if not isinstance(values, (list, tuple)):
-                values = [values]
-            normalized_values = [str(value) if value is not None else "" for value in values]
-        lines.append("| " + dataset_name + " | " + " | ".join(normalized_values) + " |")
+    lines.append("| " + " | ".join(columns) + " |")
+    lines.append("| " + " | ".join(["---"] * len(columns)) + " |")
+    for row in rows:
+        formatted_values = []
+        for column in columns:
+            value = row.get(column, "")
+            if isinstance(value, (list, tuple)):
+                value = ", ".join("" if item is None else str(item) for item in value)
+            elif isinstance(value, dict):
+                value = ", ".join(f"{key}={value[key]}" for key in sorted(value))
+            formatted_values.append("" if value is None else str(value))
+        lines.append("| " + " | ".join(formatted_values) + " |")
     return lines
 
 
@@ -70,21 +41,9 @@ def main():
     args = parse_args()
     vlm2vec_root = os.path.abspath(args.vlm2vec_root)
 
-    report_score_path = os.path.join(vlm2vec_root, "experiments", "report_score_v2.py")
-    modality_to_datasets = load_python_assignment(report_score_path, "modality2dataset")
-
-    hf_mapping = load_python_assignment(
-        os.path.join(vlm2vec_root, "src", "constant", "dataset_hf_path.py"),
-        "EVAL_DATASET_HF_PATH",
-    )
-    local_mapping = load_python_variable_via_runpy(
-        os.path.join(vlm2vec_root, "src", "constant", "dataset_hflocal_path.py"),
-        "EVAL_DATASET_HF_PATH",
-    )
-
-    train_image = load_yaml(os.path.join(vlm2vec_root, "experiments", "public", "train", "train_image.yaml"))
-    train_video = load_yaml(os.path.join(vlm2vec_root, "experiments", "public", "train", "train_video.yaml"))
-    train_visdoc = load_yaml(os.path.join(vlm2vec_root, "experiments", "public", "train", "train_visdoc.yaml"))
+    context = load_vlm2vec_context(vlm2vec_root)
+    eval_entries = build_eval_manifest_entries(vlm2vec_root)
+    train_manifest = build_train_manifest(context["train_configs"])
 
     lines = []
     lines.append("# MMEB v2 Inventory")
@@ -93,40 +52,58 @@ def main():
     lines.append("")
     lines.append("## Evaluation Coverage")
     lines.append("")
+
     for modality in ["image", "video", "visdoc"]:
+        modality_entries = [row for row in eval_entries if row["modality"] == modality]
         lines.append(f"### {modality}")
         lines.append("")
-        lines.append(f"- Task count: {len(modality_to_datasets.get(modality, []))}")
+        lines.append(f"- Task count: {len(modality_entries)}")
         lines.append("")
-        for dataset_name in modality_to_datasets.get(modality, []):
-            hf_values = hf_mapping.get(dataset_name, ("", "", ""))
-            local_values = local_mapping.get(dataset_name, ("", "", ""))
-            lines.append(
-                f"- `{dataset_name}`: HF={hf_values[0]} subset={hf_values[1]} split={hf_values[2]} "
-                f"| local={local_values[0]} subset={local_values[1]} split={local_values[2]}"
+        lines.extend(
+            format_mapping_table(
+                modality_entries,
+                [
+                    "dataset_key",
+                    "dataset_parser",
+                    "eval_type",
+                    "metadata_hf_repo",
+                    "metadata_hf_subset",
+                    "metadata_hf_split",
+                    "media_hf_repo",
+                    "media_rel_root",
+                ],
             )
+        )
         lines.append("")
 
     lines.append("## Public Training Sources")
     lines.append("")
-    lines.append("### Image")
-    lines.append("")
-    lines.extend(format_mapping_table(train_image, ["parser", "dataset_name", "subset_name", "split"]))
-    lines.append("")
-    lines.append("### Video")
-    lines.append("")
-    lines.extend(format_mapping_table(train_video, ["parser", "dataset_name", "dataset_path", "data_mode"]))
-    lines.append("")
-    lines.append("### Visdoc")
-    lines.append("")
-    lines.extend(format_mapping_table(train_visdoc, ["parser", "dataset_name", "dataset_path", "weight"]))
-    lines.append("")
+    for modality in ["image", "video", "visdoc", "alltasks"]:
+        lines.append(f"### {modality}")
+        lines.append("")
+        lines.extend(
+            format_mapping_table(
+                train_manifest[modality],
+                [
+                    "source_name",
+                    "dataset_parser",
+                    "dataset_name",
+                    "subset_name",
+                    "dataset_split",
+                    "metadata_hf_repo",
+                    "media_hf_repo",
+                    "download_patterns",
+                ],
+            )
+        )
+        lines.append("")
+
     lines.append("## Notes")
     lines.append("")
-    lines.append("- Image public training uses `TIGER-Lab/MMEB-train` subsets.")
-    lines.append("- Video public training uses `ShareGPTVideo/train_video_and_instruction` style sources.")
-    lines.append("- Visdoc public training uses `vidore/colpali_train_set` and `openbmb/VisRAG-Ret-Train-In-domain-data`.")
-    lines.append("- The scoring split used for the 78-task aggregate is defined in `experiments/report_score_v2.py`.")
+    lines.append("- Image eval metadata comes from `ziyjiang/MMEB_Test_Instruct`, while image media comes from `TIGER-Lab/MMEB-V2`.")
+    lines.append("- Many video and visdoc eval datasets combine metadata from one HF repo with media extracted under `TIGER-Lab/MMEB-V2` layouts.")
+    lines.append("- MMEB-train image media is downloaded as `images_zip/*.zip` and extracted under `images/`, not `image/`.")
+    lines.append("- ShareGPTVideo raw media layout differs across repos and scripts; use the manifest path candidates instead of hardcoding one directory name.")
     lines.append("")
 
     output_dir = os.path.dirname(os.path.abspath(args.output))

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODEL_NAME_OR_PATH="${MODEL_NAME_OR_PATH:-./outputs/mm_embedder_qwen25vl_lora}"
-DATASET_DIR="${DATASET_DIR:-./data/eval}"
-EVAL_OUTPUT_DIR="${EVAL_OUTPUT_DIR:-./outputs/mm_eval}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+PYTHON_BIN="${PYTHON_BIN:-python}"
+MODEL_NAME_OR_PATH="${MODEL_NAME_OR_PATH:-${REPO_ROOT}/outputs/mm_embedder_qwen25vl_lora}"
+DATASET_DIR="${DATASET_DIR:-${REPO_ROOT}/examples/multimodal_retrieval/data/eval}"
+EVAL_OUTPUT_DIR="${EVAL_OUTPUT_DIR:-${REPO_ROOT}/outputs/mm_eval}"
 
-python -m Nexus.evaluation.multimodal_retrieval \
+cd "${REPO_ROOT}"
+
+"${PYTHON_BIN}" -m Nexus.evaluation.multimodal_retrieval \
   --eval_name "${EVAL_NAME:-mmeb_local}" \
   --dataset_dir "${DATASET_DIR}" \
   --eval_output_dir "${EVAL_OUTPUT_DIR}" \

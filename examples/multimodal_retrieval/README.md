@@ -72,7 +72,9 @@ If your converted dataset stores JSONL files and media files under different dir
 
 ## Quick start
 
-- Training: [`training/run_qwen_vl_lora.sh`](./training/run_qwen_vl_lora.sh)
-- Evaluation: [`evaluation/run_local_eval.sh`](./evaluation/run_local_eval.sh)
+- A tiny local smoke dataset is bundled under [`data/`](./data/) so the example configs have concrete paths to point at.
+- Config-file entrypoints: [`training/run_single_device.sh`](./training/run_single_device.sh) and [`evaluation/run_local.sh`](./evaluation/run_local.sh)
+- CLI-style training: [`training/run_qwen_vl_lora.sh`](./training/run_qwen_vl_lora.sh)
+- CLI-style evaluation: [`evaluation/run_local_eval.sh`](./evaluation/run_local_eval.sh)
 - Inference: [`inference/encode_demo.py`](./inference/encode_demo.py)
 - Data conversion tools: `tools/multimodal_retrieval/`

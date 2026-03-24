@@ -78,3 +78,53 @@
 - Execute the conversion scripts and training/evaluation workflows in an environment that includes `transformers`, `datasets`, and `PyYAML`.
 - Decide whether to start large-scale public data download locally or leave actual download to the data-collection owner with the provided manifests and scripts.
 - Run real training and benchmark jobs on idle GPUs only.
+
+## 2026-03-25
+
+### Additional codebase work completed
+
+- Added manifest/export helper library:
+  - `tools/multimodal_retrieval/vlm2vec_manifest_lib.py`
+- Added HF HTTP dataset planner/downloader:
+  - `tools/multimodal_retrieval/hf_dataset_manager.py`
+- Added manifest-driven public-data orchestrator:
+  - `tools/multimodal_retrieval/prepare_public_data.py`
+- Added local batch train-data converter with stage-config emission:
+  - `tools/multimodal_retrieval/prepare_mmeb_v2_train_data.py`
+- Added config-file CLI parsing for multimodal train/eval entrypoints:
+  - `Nexus/training/embedder/multimodal_retrieval/__main__.py`
+  - `Nexus/evaluation/multimodal_retrieval/__main__.py`
+- Added a bundled example train/eval dataset under `examples/multimodal_retrieval/data/`.
+- Further reduced eager optional imports on the text-retrieval side so multimodal config parsing does not require unrelated backends up front.
+
+### Tooling fixes completed
+
+- Fixed the train/eval conversion CLIs so local input directories can be scanned recursively for parquet/json/jsonl shards instead of only the top level.
+- Fixed `prepare_public_data.py` so it can consume an older manifest file and auto-augment missing download metadata.
+- Fixed `hf_dataset_manager.py` dataset URL construction for Hugging Face tree/resolve endpoints.
+- Added `--input` support to `check_idle_gpus.py` so GPU selection can still be computed from a pre-captured `nvidia-smi` CSV dump when direct probing fails inside an isolated environment.
+
+### Validation completed in this round
+
+- `pytest tests/multimodal_retrieval -q` passes with 17 tests.
+- `tools/multimodal_retrieval/validate_stack.sh` passes end to end in the isolated `costa` environment.
+- Regenerated:
+  - `docs/multimodal_retrieval/MMEB_v2_manifest.json`
+  - `docs/multimodal_retrieval/MMEB_v2_inventory_generated.md`
+
+### Real public-data smoke result
+
+- Verified that the public-data path is executable on a real MMEB train subset.
+- Planned, downloaded, and converted:
+  - source: `TIGER-Lab/MMEB-train / HatefulMemes / original`
+  - raw artifact: `/tmp/nexus_public_smoke/raw/vlm2vec_train/MMEB-train/HatefulMemes/original-00000-of-00001.parquet`
+  - Nexus train output: `/tmp/nexus_public_smoke/nexus/train/image/HatefulMemes.jsonl`
+- Verified that `prepare_mmeb_v2_train_data.py` can transform the downloaded raw subset into stage-ready outputs and generated stage configs:
+  - `/tmp/nexus_public_smoke/stage_ready/image/HatefulMemes.jsonl`
+  - `/tmp/nexus_public_smoke/stage_configs/`
+
+### Current blockers after this round
+
+- Python-level Hugging Face access inside the sandbox still fails for SDK-style networking, so actual public-data download in this environment requires unsandboxed execution.
+- Full public data collection still exceeds the free disk currently available on this machine, so selective download remains the only safe local path right now.
+- No real GPU finetuning run has started yet because CUDA is not available inside the current isolated sandbox runtime, and shared-GPU jobs still need to be launched only on idle devices in an unsandboxed runtime.

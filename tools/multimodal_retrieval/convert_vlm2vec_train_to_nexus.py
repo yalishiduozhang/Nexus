@@ -46,6 +46,35 @@ def default_hf_datasets_cache() -> str:
     return "/tmp/huggingface/datasets"
 
 
+def find_local_data_files(directory: str) -> List[str]:
+    data_files = []
+    for current_root, _, file_names in os.walk(directory):
+        for file_name in sorted(file_names):
+            file_path = os.path.join(current_root, file_name)
+            if file_name.endswith((".json", ".jsonl", ".parquet")):
+                data_files.append(file_path)
+    return data_files
+
+
+def is_git_lfs_pointer(path: str) -> bool:
+    try:
+        with open(path, "rb") as input_file:
+            header = input_file.read(128)
+    except OSError:
+        return False
+    return header.startswith(b"version https://git-lfs.github.com/spec/v1")
+
+
+def filter_lfs_pointer_files(data_files: List[str], source_description: str) -> List[str]:
+    usable_files = [file_path for file_path in data_files if not is_git_lfs_pointer(file_path)]
+    if len(usable_files) == 0:
+        raise ValueError(
+            f"All local data files under {source_description} are Git LFS pointers. "
+            "Download the actual files first with `git lfs pull` or `prepare_public_data.py`."
+        )
+    return usable_files
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, help="HF dataset name, local dataset path, or a json/jsonl/parquet file.")
@@ -126,7 +155,24 @@ def load_any_dataset(path_or_name: str, subset: Optional[str], split: str, cache
 
     if os.path.isdir(path_or_name) and os.path.exists(os.path.join(path_or_name, "dataset_info.json")):
         dataset = load_from_disk(path_or_name)
+    elif os.path.isdir(path_or_name):
+        data_files = filter_lfs_pointer_files(find_local_data_files(path_or_name), path_or_name)
+        if len(data_files) == 0:
+            raise ValueError(f"No supported local dataset files were found in directory: {path_or_name}")
+        extensions = {os.path.splitext(file_path)[1].lower() for file_path in data_files}
+        if extensions.issubset({".json", ".jsonl"}):
+            dataset = load_dataset("json", data_files=data_files, cache_dir=cache_dir)
+        elif extensions == {".parquet"}:
+            dataset = load_dataset("parquet", data_files=data_files, cache_dir=cache_dir)
+        else:
+            raise ValueError(
+                f"Mixed local dataset file types are not supported in {path_or_name}. Found: {sorted(extensions)}"
+            )
     elif os.path.isfile(path_or_name):
+        if is_git_lfs_pointer(path_or_name):
+            raise ValueError(
+                f"Local file {path_or_name} is a Git LFS pointer. Download the actual file first."
+            )
         extension = os.path.splitext(path_or_name)[1].lower()
         if extension in [".json", ".jsonl"]:
             dataset = load_dataset("json", data_files=path_or_name, cache_dir=cache_dir)
