@@ -36,6 +36,12 @@
   - `tools/multimodal_retrieval/convert_vlm2vec_eval_to_nexus.py`
   - `tools/multimodal_retrieval/export_mmeb_v2_inventory.py`
   - `tools/multimodal_retrieval/README.md`
+- Added execution-prep assets:
+  - `docs/multimodal_retrieval/training_recipe.md`
+  - `tools/multimodal_retrieval/check_idle_gpus.py`
+  - `tools/multimodal_retrieval/create_conda_env.sh`
+  - `tools/multimodal_retrieval/environment.yml`
+- Hardened example training scripts so shared-GPU runs require explicit `CUDA_VISIBLE_DEVICES`.
 - Updated example docs and eval config to reflect the new media-root and video-input support.
 - Ran syntax checks on all touched Python files with `python -m py_compile`.
 

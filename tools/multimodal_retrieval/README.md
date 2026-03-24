@@ -49,6 +49,18 @@ python tools/multimodal_retrieval/export_mmeb_v2_inventory.py \
   --output docs/multimodal_retrieval/MMEB_v2_inventory_generated.md
 ```
 
+### `check_idle_gpus.py`
+
+Inspect shared GPUs before starting training:
+
+```bash
+python tools/multimodal_retrieval/check_idle_gpus.py
+```
+
+### `create_conda_env.sh` and `environment.yml`
+
+Use these to create an isolated runtime instead of installing into the local `base` environment.
+
 ## Environment
 
 Run these tools inside an isolated environment. Do not install dependencies into the local `base` environment.

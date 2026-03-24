@@ -5,6 +5,14 @@ MODEL_NAME_OR_PATH="${MODEL_NAME_OR_PATH:-Qwen/Qwen2.5-VL-3B-Instruct}"
 TRAIN_DATA="${TRAIN_DATA:-./data/train.jsonl}"
 OUTPUT_DIR="${OUTPUT_DIR:-./outputs/mm_embedder_qwen25vl_lora}"
 
+if [[ "${REQUIRE_EXPLICIT_GPUS:-1}" == "1" && -z "${CUDA_VISIBLE_DEVICES:-}" ]]; then
+  echo "Set CUDA_VISIBLE_DEVICES to idle GPUs only before training."
+  echo "Use tools/multimodal_retrieval/check_idle_gpus.py to inspect shared GPUs first."
+  exit 1
+fi
+
+echo "Using CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+
 torchrun --nproc_per_node="${NPROC_PER_NODE:-1}" \
   -m Nexus.training.embedder.multimodal_retrieval \
   --model_name_or_path "${MODEL_NAME_OR_PATH}" \
