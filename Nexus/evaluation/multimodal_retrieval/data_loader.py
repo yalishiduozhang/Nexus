@@ -1,10 +1,33 @@
 import os
+import tempfile
 from typing import List, Optional, Union
 
 import datasets
 
 from Nexus.abc.evaluation import AbsEvalDataLoader
 from Nexus.modules.multimodal import build_media_base_dir, normalize_multimodal_item
+
+
+def _default_hf_cache_dir() -> str:
+    candidates = []
+    for env_key in ["HF_HUB_CACHE", "HF_HOME", "XDG_CACHE_HOME"]:
+        env_value = os.getenv(env_key)
+        if env_value not in [None, ""]:
+            expanded = os.path.expanduser(env_value)
+            if env_key != "HF_HUB_CACHE":
+                expanded = os.path.join(expanded, "huggingface", "hub")
+            candidates.append(expanded)
+    candidates.append("/tmp/huggingface/hub")
+
+    for candidate in candidates:
+        try:
+            os.makedirs(candidate, exist_ok=True)
+            with tempfile.NamedTemporaryFile(dir=candidate):
+                pass
+            return candidate
+        except OSError:
+            continue
+    return "/tmp/huggingface/hub"
 
 
 class MultimodalRetrievalEvalDataLoader(AbsEvalDataLoader):
@@ -25,8 +48,13 @@ class MultimodalRetrievalEvalDataLoader(AbsEvalDataLoader):
         self.image_root = image_root
         self.video_root = video_root
         if cache_dir is None:
-            cache_dir = os.getenv("HF_HUB_CACHE", "~/.cache/huggingface/hub")
+            cache_dir = _default_hf_cache_dir()
         self.cache_dir = os.path.join(cache_dir, eval_name)
+        try:
+            os.makedirs(self.cache_dir, exist_ok=True)
+        except OSError:
+            self.cache_dir = os.path.join("/tmp/huggingface/hub", eval_name)
+            os.makedirs(self.cache_dir, exist_ok=True)
         self.token = token
         self.force_redownload = force_redownload
 

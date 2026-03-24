@@ -61,6 +61,15 @@ python tools/multimodal_retrieval/check_idle_gpus.py
 
 Use these to create an isolated runtime instead of installing into the local `base` environment.
 
+### `validate_stack.sh`
+
+Run syntax checks, multimodal tests, inventory export, and conversion smoke tests:
+
+```bash
+PYTHON_BIN=/home/szn/zht/miniconda3/envs/costa/bin/python \
+bash tools/multimodal_retrieval/validate_stack.sh
+```
+
 ## Environment
 
 Run these tools inside an isolated environment. Do not install dependencies into the local `base` environment.

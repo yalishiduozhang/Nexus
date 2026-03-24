@@ -44,9 +44,33 @@
 - Hardened example training scripts so shared-GPU runs require explicit `CUDA_VISIBLE_DEVICES`.
 - Updated example docs and eval config to reflect the new media-root and video-input support.
 - Ran syntax checks on all touched Python files with `python -m py_compile`.
+- Fixed package import coupling so multimodal modules can be imported without unrelated `onnx` dependencies being installed:
+  - lazy imports in `Nexus/__init__.py`
+  - lazy imports in `Nexus/abc/__init__.py`
+  - lazy imports in `Nexus/abc/inference/__init__.py`
+  - lazy imports in `Nexus/inference/__init__.py`
+  - lazy imports in `Nexus/inference/embedder/__init__.py`
+  - lazy imports in `Nexus/evaluation/multimodal_retrieval/__init__.py`
+- Downgraded `onnx` / `onnxruntime` / `tensorrt` in the generic inference engine to optional imports instead of hard import requirements.
+- Added regression tests under `tests/multimodal_retrieval/` covering:
+  - multimodal normalization with video fields
+  - prefixed query/pos parsing for video inputs
+  - evaluation media-root resolution
+  - conversion-tool helper behavior
+- Fixed cache-path behavior so multimodal and text retrieval evaluation loaders prefer writable cache locations and fall back to `/tmp`.
+- Fixed conversion tools so they also use writable datasets cache directories and can auto-fallback to the only available split when local JSON/JSONL loads as `train`.
+- Added `tools/multimodal_retrieval/validate_stack.sh` to reproduce the validation flow end to end.
+- Verified with the isolated `costa` environment:
+  - `import Nexus` and multimodal module import now succeed
+  - `export_mmeb_v2_inventory.py` runs successfully
+  - `convert_vlm2vec_train_to_nexus.py` CLI runs successfully
+  - `convert_vlm2vec_eval_to_nexus.py` CLI runs successfully
+  - `pytest tests/multimodal_retrieval -q` passes
+  - `validate_stack.sh` passes end to end
 
 ### Pending after this round
 
-- Commit the readiness pass as the next local milestone.
 - Build isolated runtime environments for actual training or evaluation jobs.
 - Execute the conversion scripts and training/evaluation workflows in an environment that includes `transformers`, `datasets`, and `PyYAML`.
+- Decide whether to start large-scale public data download locally or leave actual download to the data-collection owner with the provided manifests and scripts.
+- Run real training and benchmark jobs on idle GPUs only.

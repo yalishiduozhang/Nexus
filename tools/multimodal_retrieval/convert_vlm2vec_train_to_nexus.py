@@ -5,6 +5,7 @@ import argparse
 import base64
 import json
 import os
+import tempfile
 from typing import Any, Dict, Iterable, List, Optional
 
 
@@ -21,6 +22,28 @@ def require_datasets():
         ) from exc
 
     return Dataset, DatasetDict, IterableDataset, IterableDatasetDict, load_dataset, load_from_disk
+
+
+def default_hf_datasets_cache() -> str:
+    candidates = []
+    for env_key in ["HF_DATASETS_CACHE", "HF_HOME", "XDG_CACHE_HOME"]:
+        env_value = os.getenv(env_key)
+        if env_value not in [None, ""]:
+            expanded = os.path.expanduser(env_value)
+            if env_key != "HF_DATASETS_CACHE":
+                expanded = os.path.join(expanded, "huggingface", "datasets")
+            candidates.append(expanded)
+    candidates.append("/tmp/huggingface/datasets")
+
+    for candidate in candidates:
+        try:
+            os.makedirs(candidate, exist_ok=True)
+            with tempfile.NamedTemporaryFile(dir=candidate):
+                pass
+            return candidate
+        except OSError:
+            continue
+    return "/tmp/huggingface/datasets"
 
 
 def parse_args():
@@ -43,6 +66,7 @@ def parse_args():
     )
     parser.add_argument("--subset", default=None, help="Optional HF subset name.")
     parser.add_argument("--split", default="train", help="Dataset split.")
+    parser.add_argument("--cache-dir", default=None, help="Datasets cache directory. Defaults to a writable local path.")
     parser.add_argument("--max-rows", type=int, default=None, help="Optional maximum number of rows to export.")
     parser.add_argument("--dataset-name", default=None, help="Dataset name stored in output metadata.")
     parser.add_argument("--global-dataset-name", default=None, help="Optional global dataset name stored in metadata.")
@@ -95,26 +119,31 @@ def detect_source_format(args) -> str:
     return "vlm2vec_pairs"
 
 
-def load_any_dataset(path_or_name: str, subset: Optional[str], split: str):
+def load_any_dataset(path_or_name: str, subset: Optional[str], split: str, cache_dir: Optional[str] = None):
     Dataset, DatasetDict, IterableDataset, IterableDatasetDict, load_dataset, load_from_disk = require_datasets()
+    if cache_dir is None:
+        cache_dir = default_hf_datasets_cache()
 
     if os.path.isdir(path_or_name) and os.path.exists(os.path.join(path_or_name, "dataset_info.json")):
         dataset = load_from_disk(path_or_name)
     elif os.path.isfile(path_or_name):
         extension = os.path.splitext(path_or_name)[1].lower()
         if extension in [".json", ".jsonl"]:
-            dataset = load_dataset("json", data_files=path_or_name)
+            dataset = load_dataset("json", data_files=path_or_name, cache_dir=cache_dir)
         elif extension == ".parquet":
-            dataset = load_dataset("parquet", data_files=path_or_name)
+            dataset = load_dataset("parquet", data_files=path_or_name, cache_dir=cache_dir)
         else:
             raise ValueError(f"Unsupported local file type: {extension}")
     else:
-        dataset = load_dataset(path_or_name, subset)
+        dataset = load_dataset(path_or_name, subset, cache_dir=cache_dir)
 
     if isinstance(dataset, (DatasetDict, IterableDatasetDict)):
         if split not in dataset:
             available_splits = list(dataset.keys())
-            raise ValueError(f"Split `{split}` is not available. Found: {available_splits}")
+            if len(available_splits) == 1:
+                split = available_splits[0]
+            else:
+                raise ValueError(f"Split `{split}` is not available. Found: {available_splits}")
         dataset = dataset[split]
     elif subset is not None and not isinstance(dataset, (Dataset, IterableDataset)):
         raise ValueError(f"Unsupported dataset object returned from {path_or_name}: {type(dataset)}")
@@ -501,7 +530,7 @@ def write_jsonl(rows: Iterable[Dict[str, Any]], output_path: str):
 def main():
     args = parse_args()
     args.source_format = detect_source_format(args)
-    dataset = load_any_dataset(args.input, subset=args.subset, split=args.split)
+    dataset = load_any_dataset(args.input, subset=args.subset, split=args.split, cache_dir=args.cache_dir)
     converter = row_converter_for(args.source_format)
 
     def converted_rows():

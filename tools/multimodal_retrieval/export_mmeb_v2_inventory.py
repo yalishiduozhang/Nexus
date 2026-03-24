@@ -4,6 +4,7 @@
 import argparse
 import ast
 import os
+import runpy
 from typing import Any, Dict
 
 
@@ -42,6 +43,13 @@ def load_python_assignment(path: str, variable_name: str):
     raise ValueError(f"Variable `{variable_name}` not found in {path}")
 
 
+def load_python_variable_via_runpy(path: str, variable_name: str):
+    namespace = runpy.run_path(path, init_globals={"__name__": "__nexus_inventory_loader__"})
+    if variable_name not in namespace:
+        raise ValueError(f"Variable `{variable_name}` not found in {path}")
+    return namespace[variable_name]
+
+
 def format_mapping_table(mapping: Dict[str, Any], value_headers):
     lines = []
     header = "| Dataset | " + " | ".join(value_headers) + " |"
@@ -69,7 +77,7 @@ def main():
         os.path.join(vlm2vec_root, "src", "constant", "dataset_hf_path.py"),
         "EVAL_DATASET_HF_PATH",
     )
-    local_mapping = load_python_assignment(
+    local_mapping = load_python_variable_via_runpy(
         os.path.join(vlm2vec_root, "src", "constant", "dataset_hflocal_path.py"),
         "EVAL_DATASET_HF_PATH",
     )
