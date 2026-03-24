@@ -96,6 +96,7 @@
   - `Nexus/evaluation/multimodal_retrieval/__main__.py`
 - Added a bundled example train/eval dataset under `examples/multimodal_retrieval/data/`.
 - Further reduced eager optional imports on the text-retrieval side so multimodal config parsing does not require unrelated backends up front.
+- Added Git LFS pointer detection to the conversion tools so metadata-only clones fail with a clear action instead of a low-level parquet error.
 
 ### Tooling fixes completed
 
@@ -106,8 +107,9 @@
 
 ### Validation completed in this round
 
-- `pytest tests/multimodal_retrieval -q` passes with 17 tests.
+- `pytest tests/multimodal_retrieval -q` passes with 18 tests.
 - `tools/multimodal_retrieval/validate_stack.sh` passes end to end in the isolated `costa` environment.
+- `python -m Nexus.evaluation.multimodal_retrieval --help` now works without `onnx` or `faiss` installed.
 - Regenerated:
   - `docs/multimodal_retrieval/MMEB_v2_manifest.json`
   - `docs/multimodal_retrieval/MMEB_v2_inventory_generated.md`
@@ -117,14 +119,14 @@
 - Verified that the public-data path is executable on a real MMEB train subset.
 - Planned, downloaded, and converted:
   - source: `TIGER-Lab/MMEB-train / HatefulMemes / original`
-  - raw artifact: `/tmp/nexus_public_smoke/raw/vlm2vec_train/MMEB-train/HatefulMemes/original-00000-of-00001.parquet`
-  - Nexus train output: `/tmp/nexus_public_smoke/nexus/train/image/HatefulMemes.jsonl`
+  - raw artifact: `/tmp/public_mmeb_raw/vlm2vec_train/MMEB-train/HatefulMemes/original-00000-of-00001.parquet`
+  - Nexus train output: `/tmp/public_mmeb_nexus/train/image/HatefulMemes.jsonl`
 - Verified that `prepare_mmeb_v2_train_data.py` can transform the downloaded raw subset into stage-ready outputs and generated stage configs:
-  - `/tmp/nexus_public_smoke/stage_ready/image/HatefulMemes.jsonl`
-  - `/tmp/nexus_public_smoke/stage_configs/`
+  - `/tmp/public_mmeb_stage_train/image/HatefulMemes.jsonl`
+  - `/tmp/public_mmeb_stage_configs/`
 
 ### Current blockers after this round
 
 - Python-level Hugging Face access inside the sandbox still fails for SDK-style networking, so actual public-data download in this environment requires unsandboxed execution.
 - Full public data collection still exceeds the free disk currently available on this machine, so selective download remains the only safe local path right now.
-- No real GPU finetuning run has started yet because CUDA is not available inside the current isolated sandbox runtime, and shared-GPU jobs still need to be launched only on idle devices in an unsandboxed runtime.
+- A real `Qwen/Qwen2-VL-2B-Instruct` smoke inference attempt was started on idle GPU `2`, but it was stopped after stalling in backbone download. No completed backbone-level run is available yet.
