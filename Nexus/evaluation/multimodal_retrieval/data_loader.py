@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 import datasets
 
 from Nexus.abc.evaluation import AbsEvalDataLoader
-from Nexus.modules.multimodal import normalize_multimodal_item
+from Nexus.modules.multimodal import build_media_base_dir, normalize_multimodal_item
 
 
 class MultimodalRetrievalEvalDataLoader(AbsEvalDataLoader):
@@ -12,12 +12,18 @@ class MultimodalRetrievalEvalDataLoader(AbsEvalDataLoader):
         self,
         eval_name: str,
         dataset_dir: Optional[str] = None,
+        media_root: Optional[str] = None,
+        image_root: Optional[str] = None,
+        video_root: Optional[str] = None,
         cache_dir: Optional[str] = None,
         token: Optional[str] = None,
         force_redownload: bool = False,
     ):
         self.eval_name = eval_name
         self.dataset_dir = dataset_dir
+        self.media_root = media_root
+        self.image_root = image_root
+        self.video_root = video_root
         if cache_dir is None:
             cache_dir = os.getenv("HF_HUB_CACHE", "~/.cache/huggingface/hub")
         self.cache_dir = os.path.join(cache_dir, eval_name)
@@ -69,14 +75,23 @@ class MultimodalRetrievalEvalDataLoader(AbsEvalDataLoader):
             raise NotImplementedError("Remote multimodal evaluation loading is not implemented.")
         return self.dataset_dir if dataset_name is None else os.path.join(self.dataset_dir, dataset_name)
 
+    def _get_media_base_dir(self, save_dir: str):
+        return build_media_base_dir(
+            base_dir=save_dir,
+            media_root=self.media_root,
+            image_root=self.image_root,
+            video_root=self.video_root,
+        )
+
     def load_corpus(self, dataset_name: Optional[str] = None):
         save_dir = self._get_save_dir(dataset_name=dataset_name)
+        media_base_dir = self._get_media_base_dir(save_dir)
         corpus_path = os.path.join(save_dir, "corpus.jsonl")
         corpus_data = datasets.load_dataset("json", data_files=corpus_path, cache_dir=self.cache_dir)["train"]
 
         corpus = {}
         for entry in corpus_data:
-            corpus[entry["_id"]] = normalize_multimodal_item(entry, base_dir=save_dir)
+            corpus[entry["_id"]] = normalize_multimodal_item(entry, base_dir=media_base_dir)
         return corpus
 
     def load_qrels(self, dataset_name: Optional[str] = None, split: str = "test"):
@@ -94,10 +109,11 @@ class MultimodalRetrievalEvalDataLoader(AbsEvalDataLoader):
 
     def load_queries(self, dataset_name: Optional[str] = None, split: str = "test"):
         save_dir = self._get_save_dir(dataset_name=dataset_name)
+        media_base_dir = self._get_media_base_dir(save_dir)
         queries_path = os.path.join(save_dir, f"{split}_queries.jsonl")
         queries_data = datasets.load_dataset("json", data_files=queries_path, cache_dir=self.cache_dir)["train"]
 
         queries = {}
         for entry in queries_data:
-            queries[entry["_id"]] = normalize_multimodal_item(entry, base_dir=save_dir)
+            queries[entry["_id"]] = normalize_multimodal_item(entry, base_dir=media_base_dir)
         return queries

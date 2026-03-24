@@ -11,6 +11,7 @@ from Nexus.abc.training.embedder import AbsEmbedderCollator, AbsEmbedderTrainDat
 from Nexus.modules.multimodal import (
     apply_instruction,
     build_prefixed_multimodal_group,
+    build_media_base_dir,
     is_empty_multimodal_item,
 )
 
@@ -84,7 +85,12 @@ class AbsMultimodalEmbedderTrainDataset(AbsEmbedderTrainDataset):
         while sampled_index == current_index:
             sampled_index = random.randrange(len(self.dataset))
         sampled_row = self.dataset[sampled_index]
-        sampled_base_dir = sampled_row.get("base_dir", self.args.media_root)
+        sampled_base_dir = build_media_base_dir(
+            base_dir=sampled_row.get("base_dir"),
+            media_root=sampled_row.get("media_root", self.args.media_root),
+            image_root=sampled_row.get("image_root"),
+            video_root=sampled_row.get("video_root"),
+        )
         sampled_candidates = build_prefixed_multimodal_group(sampled_row, "pos", base_dir=sampled_base_dir)
         if len(sampled_candidates) == 0:
             sampled_candidates = build_prefixed_multimodal_group(sampled_row, "query", base_dir=sampled_base_dir)
@@ -118,7 +124,12 @@ class AbsMultimodalEmbedderTrainDataset(AbsEmbedderTrainDataset):
 
     def __getitem__(self, item):
         data = self.dataset[item]
-        base_dir = data.get("base_dir", self.args.media_root)
+        base_dir = build_media_base_dir(
+            base_dir=data.get("base_dir"),
+            media_root=data.get("media_root", self.args.media_root),
+            image_root=data.get("image_root"),
+            video_root=data.get("video_root"),
+        )
 
         query_candidates = build_prefixed_multimodal_group(data, "query", base_dir=base_dir)
         if len(query_candidates) == 0:

@@ -42,9 +42,13 @@ Supported multimodal item fields:
 - `image_path`
 - `image_paths`
 - `pages`
+- `video`
+- `video_path`
+- `videos`
+- `video_paths`
 - `video_frames`
 
-Relative media paths are resolved against the source json/jsonl file directory. When explicit negatives are missing, Nexus now falls back to sampling negatives from other records in the same dataset.
+Relative media paths are resolved against the source json/jsonl file directory by default. You can also keep media files under separate roots by setting `media_root`, `image_root`, or `video_root` in the train/eval configs. When explicit negatives are missing, Nexus now falls back to sampling negatives from other records in the same dataset.
 
 ## Evaluation dataset format
 
@@ -60,8 +64,15 @@ Each query/corpus line must contain `_id` plus the multimodal fields above. Each
 {"query-id": "q1", "corpus-id": "d42", "score": 1}
 ```
 
+If your converted dataset stores JSONL files and media files under different directories, set the following fields in the evaluation config:
+
+- `media_root`
+- `image_root`
+- `video_root`
+
 ## Quick start
 
 - Training: [`training/run_qwen_vl_lora.sh`](./training/run_qwen_vl_lora.sh)
 - Evaluation: [`evaluation/run_local_eval.sh`](./evaluation/run_local_eval.sh)
 - Inference: [`inference/encode_demo.py`](./inference/encode_demo.py)
+- Data conversion tools: `tools/multimodal_retrieval/`

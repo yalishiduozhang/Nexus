@@ -1,6 +1,9 @@
 {
     "eval_name": "multimodal_local",
     "dataset_dir": "examples/multimodal_retrieval/data/eval",
+    "media_root": null,
+    "image_root": null,
+    "video_root": null,
     "dataset_names": null,
     "splits": [
         "test"
@@ -26,4 +29,3 @@
         100
     ]
 }
-

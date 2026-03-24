@@ -209,16 +209,30 @@ class MultimodalEmbedder(AbsEmbedder):
         if single_input:
             inputs = [inputs]
 
-        embeddings = self.encode_single_device(
-            inputs,
-            batch_size=batch_size,
-            max_length=max_length,
-            convert_to_numpy=convert_to_numpy,
-            device=self.target_devices[0],
-            instruction=instruction,
-            instruction_format=instruction_format,
-            **kwargs,
-        )
+        if single_input or len(self.target_devices) == 1:
+            embeddings = self.encode_single_device(
+                inputs,
+                batch_size=batch_size,
+                max_length=max_length,
+                convert_to_numpy=convert_to_numpy,
+                device=self.target_devices[0],
+                instruction=instruction,
+                instruction_format=instruction_format,
+                **kwargs,
+            )
+        else:
+            if self.pool is None:
+                self.pool = self.start_multi_process_pool(AbsEmbedder._encode_multi_process_worker)
+            embeddings = self.encode_multi_process(
+                inputs,
+                self.pool,
+                batch_size=batch_size,
+                max_length=max_length,
+                convert_to_numpy=convert_to_numpy,
+                instruction=instruction,
+                instruction_format=instruction_format,
+                **kwargs,
+            )
         return embeddings[0] if single_input else embeddings
 
     def compute_score(self, queries, passages, **kwargs: Any):

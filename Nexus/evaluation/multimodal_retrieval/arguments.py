@@ -19,6 +19,18 @@ class MultimodalRetrievalEvalArgs(AbsEvalArguments):
         default=None,
         metadata={"help": "Dataset directory containing `corpus.jsonl`, `<split>_queries.jsonl`, and `<split>_qrels.jsonl`."},
     )
+    media_root: Optional[str] = field(
+        default=None,
+        metadata={"help": "Optional default root for relative media paths in the eval jsonl files."},
+    )
+    image_root: Optional[str] = field(
+        default=None,
+        metadata={"help": "Optional image root that overrides `media_root` for images/pages."},
+    )
+    video_root: Optional[str] = field(
+        default=None,
+        metadata={"help": "Optional video root that overrides `media_root` for raw videos."},
+    )
     dataset_names: Optional[List[str]] = field(
         default=None,
         metadata={"help": "Optional list of dataset subdirectories to evaluate.", "nargs": "+"},

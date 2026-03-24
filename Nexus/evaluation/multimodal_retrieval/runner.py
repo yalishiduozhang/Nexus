@@ -62,6 +62,9 @@ class MultimodalRetrievalEvalRunner(AbsEvalRunner):
         return MultimodalRetrievalEvalDataLoader(
             eval_name=self.eval_args.eval_name,
             dataset_dir=self.eval_args.dataset_dir,
+            media_root=self.eval_args.media_root,
+            image_root=self.eval_args.image_root,
+            video_root=self.eval_args.video_root,
             cache_dir=self.eval_args.cache_path,
             token=self.eval_args.token,
             force_redownload=self.eval_args.force_redownload,
