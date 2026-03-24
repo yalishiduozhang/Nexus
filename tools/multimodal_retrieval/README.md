@@ -49,6 +49,16 @@ python tools/multimodal_retrieval/export_mmeb_v2_inventory.py \
   --output docs/multimodal_retrieval/MMEB_v2_inventory_generated.md
 ```
 
+### `export_mmeb_v2_manifest.py`
+
+Generate a machine-readable JSON manifest for the MMEB v2 eval sets and public train sources:
+
+```bash
+python tools/multimodal_retrieval/export_mmeb_v2_manifest.py \
+  --vlm2vec-root ../VLM2Vec \
+  --output docs/multimodal_retrieval/MMEB_v2_manifest.json
+```
+
 ### `check_idle_gpus.py`
 
 Inspect shared GPUs before starting training:

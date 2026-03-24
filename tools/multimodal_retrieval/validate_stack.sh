@@ -27,6 +27,7 @@ echo "[1/4] py_compile"
   "${REPO_ROOT}/tools/multimodal_retrieval/convert_vlm2vec_train_to_nexus.py" \
   "${REPO_ROOT}/tools/multimodal_retrieval/convert_vlm2vec_eval_to_nexus.py" \
   "${REPO_ROOT}/tools/multimodal_retrieval/export_mmeb_v2_inventory.py" \
+  "${REPO_ROOT}/tools/multimodal_retrieval/export_mmeb_v2_manifest.py" \
   "${REPO_ROOT}/tools/multimodal_retrieval/check_idle_gpus.py"
 
 echo "[2/4] pytest"
@@ -37,6 +38,9 @@ echo "[3/4] inventory export"
 "${PYTHON_BIN}" tools/multimodal_retrieval/export_mmeb_v2_inventory.py \
   --vlm2vec-root /home/szn/zhangx/explore/VLM2Vec \
   --output "${TMP_ROOT}/mmeb_inventory_generated.md"
+"${PYTHON_BIN}" tools/multimodal_retrieval/export_mmeb_v2_manifest.py \
+  --vlm2vec-root /home/szn/zhangx/explore/VLM2Vec \
+  --output "${TMP_ROOT}/mmeb_manifest_generated.json"
 
 echo "[4/4] conversion smoke"
 cat > "${TMP_ROOT}/train_pair.jsonl" <<'EOF'

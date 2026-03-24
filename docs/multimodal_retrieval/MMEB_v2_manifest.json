@@ -1,0 +1,1316 @@
+{
+  "source": "local_vlm2vec",
+  "vlm2vec_root": "/home/szn/zhangx/explore/VLM2Vec",
+  "eval": [
+    {
+      "modality": "image",
+      "dataset_name": "ImageNet-1K",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "ImageNet-1K",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "N24News",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "N24News",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "HatefulMemes",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "HatefulMemes",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "VOC2007",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "VOC2007",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "SUN397",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "SUN397",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "Place365",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "Place365",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "ImageNet-A",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "ImageNet-A",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "ImageNet-R",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "ImageNet-R",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "ObjectNet",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "ObjectNet",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "Country211",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "Country211",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "OK-VQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "OK-VQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "A-OKVQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "A-OKVQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "DocVQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "DocVQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "InfographicsVQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "InfographicsVQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "ChartQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "ChartQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "Visual7W",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "Visual7W",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "ScienceQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "ScienceQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "VizWiz",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "VizWiz",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "GQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "GQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "TextVQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "TextVQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "VisDial",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "VisDial",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "CIRR",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "CIRR",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "VisualNews_t2i",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "VisualNews_t2i",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "VisualNews_i2t",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "VisualNews_i2t",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "MSCOCO_t2i",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "MSCOCO_t2i",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "MSCOCO_i2t",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "MSCOCO_i2t",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "NIGHTS",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "NIGHTS",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "WebQA",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "WebQA",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "FashionIQ",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "FashionIQ",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "Wiki-SS-NQ",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "Wiki-SS-NQ",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "OVEN",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "OVEN",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "EDIS",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "EDIS",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "MSCOCO",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "MSCOCO",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "RefCOCO",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "RefCOCO",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "RefCOCO-Matching",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "RefCOCO-Matching",
+      "local_split": "test"
+    },
+    {
+      "modality": "image",
+      "dataset_name": "Visual7W-Pointing",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "image-tasks",
+      "local_subset": "Visual7W-Pointing",
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "K700",
+      "hf_repo": "",
+      "hf_subset": "",
+      "hf_split": "",
+      "local_repo": "",
+      "local_subset": "",
+      "local_split": ""
+    },
+    {
+      "modality": "video",
+      "dataset_name": "SmthSmthV2",
+      "hf_repo": "VLM2Vec/SmthSmthV2",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/SmthSmthV2",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "HMDB51",
+      "hf_repo": "VLM2Vec/HMDB51",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/HMDB51",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "UCF101",
+      "hf_repo": "VLM2Vec/UCF101",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/UCF101",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "Breakfast",
+      "hf_repo": "VLM2Vec/Breakfast",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/Breakfast",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "MVBench",
+      "hf_repo": "VLM2Vec/MVBench",
+      "hf_subset": null,
+      "hf_split": "train",
+      "local_repo": "video-tasks/MVBench",
+      "local_subset": null,
+      "local_split": "train"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "Video-MME",
+      "hf_repo": "VLM2Vec/Video-MME",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/Video-MME",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "NExTQA",
+      "hf_repo": "VLM2Vec/NExTQA",
+      "hf_subset": "MC",
+      "hf_split": "test",
+      "local_repo": "video-tasks/NExTQA",
+      "local_subset": "MC",
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "EgoSchema",
+      "hf_repo": "VLM2Vec/EgoSchema",
+      "hf_subset": "Subset",
+      "hf_split": "test",
+      "local_repo": "video-tasks/EgoSchema",
+      "local_subset": "Subset",
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "ActivityNetQA",
+      "hf_repo": "VLM2Vec/ActivityNetQA",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/ActivityNetQA",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "DiDeMo",
+      "hf_repo": "VLM2Vec/DiDeMo",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/DiDeMo",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "MSR-VTT",
+      "hf_repo": "VLM2Vec/MSR-VTT",
+      "hf_subset": "test_1k",
+      "hf_split": "test",
+      "local_repo": "video-tasks/MSR-VTT",
+      "local_subset": "test_1k",
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "MSVD",
+      "hf_repo": "VLM2Vec/MSVD",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/MSVD",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "VATEX",
+      "hf_repo": "VLM2Vec/VATEX",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/VATEX",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "YouCook2",
+      "hf_repo": "lmms-lab/YouCook2",
+      "hf_subset": null,
+      "hf_split": "val",
+      "local_repo": "video-tasks/YouCook2",
+      "local_subset": null,
+      "local_split": "val"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "QVHighlight",
+      "hf_repo": "VLM2Vec/QVHighlight",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/QVHighlight",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "Charades-STA",
+      "hf_repo": "VLM2Vec/Charades-STA",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/Charades-STA",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "video",
+      "dataset_name": "MomentSeeker",
+      "hf_repo": "VLM2Vec/MomentSeeker",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "video-tasks/MomentSeeker",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_arxivqa",
+      "hf_repo": "vidore/arxivqa_test_subsampled_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/arxivqa_test_subsampled_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_docvqa",
+      "hf_repo": "vidore/docvqa_test_subsampled_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/docvqa_test_subsampled_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_infovqa",
+      "hf_repo": "vidore/infovqa_test_subsampled_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/infovqa_test_subsampled_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_tabfquad",
+      "hf_repo": "vidore/tabfquad_test_subsampled_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/tabfquad_test_subsampled_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_tatdqa",
+      "hf_repo": "vidore/tatdqa_test_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/tatdqa_test_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_shiftproject",
+      "hf_repo": "vidore/shiftproject_test_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/shiftproject_test_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_syntheticDocQA_artificial_intelligence",
+      "hf_repo": "vidore/syntheticDocQA_artificial_intelligence_test_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/syntheticDocQA_artificial_intelligence_test_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_syntheticDocQA_energy",
+      "hf_repo": "vidore/syntheticDocQA_energy_test_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/syntheticDocQA_energy_test_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_syntheticDocQA_government_reports",
+      "hf_repo": "vidore/syntheticDocQA_government_reports_test_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/syntheticDocQA_government_reports_test_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_syntheticDocQA_healthcare_industry",
+      "hf_repo": "vidore/syntheticDocQA_healthcare_industry_test_beir",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/syntheticDocQA_healthcare_industry_test_beir",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_esg_reports_human_labeled_v2",
+      "hf_repo": "vidore/esg_reports_human_labeled_v2",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/esg_reports_human_labeled_v2",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_biomedical_lectures_v2_multilingual",
+      "hf_repo": "vidore/biomedical_lectures_v2",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/biomedical_lectures_v2",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_economics_reports_v2_multilingual",
+      "hf_repo": "vidore/economics_reports_v2",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/economics_reports_v2",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoRe_esg_reports_v2_multilingual",
+      "hf_repo": "vidore/esg_reports_v2",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/esg_reports_v2",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "VisRAG_ArxivQA",
+      "hf_repo": "openbmb/VisRAG-Ret-Test-ArxivQA",
+      "hf_subset": null,
+      "hf_split": "train",
+      "local_repo": "visdoc-tasks/VisRAG-Ret-Test-ArxivQA",
+      "local_subset": null,
+      "local_split": "train"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "VisRAG_ChartQA",
+      "hf_repo": "openbmb/VisRAG-Ret-Test-ChartQA",
+      "hf_subset": null,
+      "hf_split": "train",
+      "local_repo": "visdoc-tasks/VisRAG-Ret-Test-ChartQA",
+      "local_subset": null,
+      "local_split": "train"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "VisRAG_MP-DocVQA",
+      "hf_repo": "openbmb/VisRAG-Ret-Test-MP-DocVQA",
+      "hf_subset": null,
+      "hf_split": "train",
+      "local_repo": "visdoc-tasks/VisRAG-Ret-Test-MP-DocVQA",
+      "local_subset": null,
+      "local_split": "train"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "VisRAG_SlideVQA",
+      "hf_repo": "openbmb/VisRAG-Ret-Test-SlideVQA",
+      "hf_subset": null,
+      "hf_split": "train",
+      "local_repo": "visdoc-tasks/VisRAG-Ret-Test-SlideVQA",
+      "local_subset": null,
+      "local_split": "train"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "VisRAG_InfoVQA",
+      "hf_repo": "openbmb/VisRAG-Ret-Test-InfoVQA",
+      "hf_subset": null,
+      "hf_split": "train",
+      "local_repo": "visdoc-tasks/VisRAG-Ret-Test-InfoVQA",
+      "local_subset": null,
+      "local_split": "train"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "VisRAG_PlotQA",
+      "hf_repo": "openbmb/VisRAG-Ret-Test-PlotQA",
+      "hf_subset": null,
+      "hf_split": "train",
+      "local_repo": "visdoc-tasks/VisRAG-Ret-Test-PlotQA",
+      "local_subset": null,
+      "local_split": "train"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoSeek-page",
+      "hf_repo": "VLM2Vec/ViDoSeek-page-fixed",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/ViDoSeek-page",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "ViDoSeek-doc",
+      "hf_repo": "VLM2Vec/ViDoSeek",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/ViDoSeek",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "MMLongBench-page",
+      "hf_repo": "VLM2Vec/MMLongBench-page-fixed",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/MMLongBench",
+      "local_subset": null,
+      "local_split": "test"
+    },
+    {
+      "modality": "visdoc",
+      "dataset_name": "MMLongBench-doc",
+      "hf_repo": "VLM2Vec/MMLongBench-doc",
+      "hf_subset": null,
+      "hf_split": "test",
+      "local_repo": "visdoc-tasks/MMLongBench-doc",
+      "local_subset": null,
+      "local_split": "test"
+    }
+  ],
+  "train": {
+    "image": [
+      {
+        "source_name": "ImageNet_1K",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "ImageNet_1K",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "N24News",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "N24News",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 50000,
+        "weight": 1
+      },
+      {
+        "source_name": "HatefulMemes",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "HatefulMemes",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 10000,
+        "weight": 1
+      },
+      {
+        "source_name": "VOC2007",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "VOC2007",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 10000,
+        "weight": 1
+      },
+      {
+        "source_name": "SUN397",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "SUN397",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 20000,
+        "weight": 1
+      },
+      {
+        "source_name": "OK-VQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "OK-VQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 10000,
+        "weight": 1
+      },
+      {
+        "source_name": "A-OKVQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "A-OKVQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 20000,
+        "weight": 1
+      },
+      {
+        "source_name": "DocVQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "DocVQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 40000,
+        "weight": 1
+      },
+      {
+        "source_name": "InfographicsVQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "InfographicsVQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 25000,
+        "weight": 1
+      },
+      {
+        "source_name": "ChartQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "ChartQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 28000,
+        "weight": 1
+      },
+      {
+        "source_name": "Visual7W",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "Visual7W",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 70000,
+        "weight": 1
+      },
+      {
+        "source_name": "VisDial",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "VisDial",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 130000,
+        "weight": 1
+      },
+      {
+        "source_name": "CIRR",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "CIRR",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 30000,
+        "weight": 1
+      },
+      {
+        "source_name": "VisualNews_t2i",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "VisualNews_t2i",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "VisualNews_i2t",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "VisualNews_i2t",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "MSCOCO_t2i",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "MSCOCO_t2i",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "MSCOCO_i2t",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "MSCOCO_i2t",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 120000,
+        "weight": 1
+      },
+      {
+        "source_name": "NIGHTS",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "NIGHTS",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 20000,
+        "weight": 1
+      },
+      {
+        "source_name": "WebQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "WebQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 20000,
+        "weight": 1
+      },
+      {
+        "source_name": "MSCOCO",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "MSCOCO",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      }
+    ],
+    "video": [
+      {
+        "source_name": "video_caption_300k",
+        "dataset_parser": "llavahound_caption",
+        "dataset_name": "video_caption_300k",
+        "dataset_path": "vlm2vec_train/train_video_and_instruction/video_instruction/train/sft/video_caption_300k.jsonl",
+        "video_frame_basedir": "vlm2vec_train/train_video_and_instruction/train_300k",
+        "weight": 5,
+        "num_rows": 300000,
+        "num_frames": 8,
+        "data_mode": "caption_retrieval"
+      },
+      {
+        "source_name": "video_caption_300k-video",
+        "dataset_parser": "llavahound_caption",
+        "dataset_name": "video_caption_300k",
+        "dataset_path": "vlm2vec_train/train_video_and_instruction/video_instruction/train/sft/video_caption_300k.jsonl",
+        "video_frame_basedir": "vlm2vec_train/train_video_and_instruction/train_300k",
+        "weight": 5,
+        "num_rows": 300000,
+        "num_frames": 8,
+        "data_mode": "video_retrieval"
+      },
+      {
+        "source_name": "video_qa_240k",
+        "dataset_parser": "llavahound_qa",
+        "dataset_name": "video_qa_240k",
+        "dataset_path": "vlm2vec_train/train_video_and_instruction/video_instruction/train/sft/video_240k_caption_15k.jsonl",
+        "video_frame_basedir": "vlm2vec_train/train_video_and_instruction/train_300k",
+        "weight": 5,
+        "num_rows": 240000,
+        "num_frames": 8
+      }
+    ],
+    "visdoc": [
+      {
+        "source_name": "ImageNet_1K",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "ImageNet_1K",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "N24News",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "N24News",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 50000,
+        "weight": 1
+      },
+      {
+        "source_name": "HatefulMemes",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "HatefulMemes",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 10000,
+        "weight": 1
+      },
+      {
+        "source_name": "colpali_train_set",
+        "dataset_parser": "vidore",
+        "dataset_name": "vidore/colpali_train_set",
+        "weight": 10
+      },
+      {
+        "source_name": "visrag-indomain",
+        "dataset_parser": "visrag",
+        "dataset_name": "openbmb/VisRAG-Ret-Train-In-domain-data",
+        "global_dataset_name": "VisRAG-Indomain-data",
+        "weight": 12
+      }
+    ],
+    "alltasks": [
+      {
+        "source_name": "ImageNet_1K",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "ImageNet_1K",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "N24News",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "N24News",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 50000,
+        "weight": 1
+      },
+      {
+        "source_name": "HatefulMemes",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "HatefulMemes",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 10000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "VOC2007",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "VOC2007",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 10000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "SUN397",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "SUN397",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 20000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "OK-VQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "OK-VQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 10000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "A-OKVQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "A-OKVQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 20000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "DocVQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "DocVQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 40000,
+        "weight": 1
+      },
+      {
+        "source_name": "InfographicsVQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "InfographicsVQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 25000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "ChartQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "ChartQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 28000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "Visual7W",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "Visual7W",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 70000,
+        "weight": 1
+      },
+      {
+        "source_name": "VisDial",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "VisDial",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 130000,
+        "weight": 1
+      },
+      {
+        "source_name": "CIRR",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "CIRR",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 30000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "VisualNews_t2i",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "VisualNews_t2i",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "VisualNews_i2t",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "VisualNews_i2t",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "MSCOCO_t2i",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "MSCOCO_t2i",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "MSCOCO_i2t",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "MSCOCO_i2t",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 120000,
+        "weight": 1
+      },
+      {
+        "source_name": "NIGHTS",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "NIGHTS",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 20000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "WebQA",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "WebQA",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 20000,
+        "weight": 0.5
+      },
+      {
+        "source_name": "MSCOCO",
+        "dataset_parser": "mmeb",
+        "dataset_name": "TIGER-Lab/MMEB-train",
+        "subset_name": "MSCOCO",
+        "dataset_split": "original",
+        "image_dir": "vlm2vec_train/MMEB-train/image",
+        "num_sample_per_subset": 100000,
+        "weight": 1
+      },
+      {
+        "source_name": "colpali_train_set",
+        "dataset_parser": "vidore",
+        "dataset_name": "vidore/colpali_train_set",
+        "weight": 10
+      },
+      {
+        "source_name": "visrag-indomain",
+        "dataset_parser": "visrag",
+        "dataset_name": "openbmb/VisRAG-Ret-Train-In-domain-data",
+        "global_dataset_name": "VisRAG-Indomain-data",
+        "weight": 12
+      },
+      {
+        "source_name": "video_caption_300k",
+        "dataset_parser": "llavahound_caption",
+        "dataset_name": "video_caption_300k",
+        "dataset_path": "vlm2vec_train/train_video_and_instruction/video_instruction/train/sft/video_caption_300k.jsonl",
+        "video_frame_basedir": "vlm2vec_train/train_video_and_instruction/train_300k",
+        "weight": 5,
+        "num_rows": 300000,
+        "num_frames": 8,
+        "data_mode": "caption_retrieval"
+      },
+      {
+        "source_name": "video_caption_300k-video",
+        "dataset_parser": "llavahound_caption",
+        "dataset_name": "video_caption_300k",
+        "dataset_path": "vlm2vec_train/train_video_and_instruction/video_instruction/train/sft/video_caption_300k.jsonl",
+        "video_frame_basedir": "vlm2vec_train/train_video_and_instruction/train_300k",
+        "weight": 5,
+        "num_rows": 300000,
+        "num_frames": 8,
+        "data_mode": "video_retrieval"
+      },
+      {
+        "source_name": "video_qa_240k",
+        "dataset_parser": "llavahound_qa",
+        "dataset_name": "video_qa_240k",
+        "dataset_path": "vlm2vec_train/train_video_and_instruction/video_instruction/train/sft/video_240k_caption_15k.jsonl",
+        "video_frame_basedir": "vlm2vec_train/train_video_and_instruction/train_300k",
+        "weight": 5,
+        "num_rows": 240000,
+        "num_frames": 8
+      }
+    ]
+  }
+}

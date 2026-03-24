@@ -32,9 +32,11 @@
 - Updated training and evaluation path handling so converted datasets can keep separate media roots.
 - Added data preparation assets:
   - `docs/multimodal_retrieval/MMEB_v2_data_inventory.md`
+  - `docs/multimodal_retrieval/MMEB_v2_manifest.json`
   - `tools/multimodal_retrieval/convert_vlm2vec_train_to_nexus.py`
   - `tools/multimodal_retrieval/convert_vlm2vec_eval_to_nexus.py`
   - `tools/multimodal_retrieval/export_mmeb_v2_inventory.py`
+  - `tools/multimodal_retrieval/export_mmeb_v2_manifest.py`
   - `tools/multimodal_retrieval/README.md`
 - Added execution-prep assets:
   - `docs/multimodal_retrieval/training_recipe.md`

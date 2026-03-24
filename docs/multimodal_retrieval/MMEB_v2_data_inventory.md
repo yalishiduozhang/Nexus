@@ -14,6 +14,10 @@ The local source of truth used here is `VLM2Vec`, especially:
 - `src/constant/dataset_hf_path.py`
 - `src/constant/dataset_hflocal_path.py`
 
+There is also a generated machine-readable export at:
+
+- `docs/multimodal_retrieval/MMEB_v2_manifest.json`
+
 ## Scoreboard Granularity
 
 MMEB v2 is aggregated into 3 modalities and 78 tasks:
