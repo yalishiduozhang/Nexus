@@ -16,11 +16,14 @@
 - 所声明支持的 backbone family 已经做了真实的加载验证：
   - 在当前 `costa` 环境下，`qwen2_vl / qwen2_5_vl / llava_next` 均完成 tiny-checkpoint `from_pretrained` 加载验证
   - 在额外隔离的 `transformers 4.57.3` 环境下，`qwen3_vl` 也完成了同样的真实加载验证
+- `qwen3_vl` 已进一步完成 smoke 级训练、重载、推理、本地评测与真实 MMEB 子集评测
 
 需要严格说明的边界：
 
-- 目前完成“训练 + 推理 + 本地评测 + 真实 MMEB 子集评测”完整闭环的 backbone 仍然是 `Qwen2-VL-2B-Instruct`
-- `Qwen2.5-VL / Qwen3-VL / Llava-Next` 已完成真实 family-loader 验证，但尚未在本仓库内完成同等级别的大模型训练 / MMEB benchmark 闭环
+- 目前完成 smoke 级“训练 + 推理 + 本地评测 + 真实 MMEB 子集评测”完整闭环的 backbone 已经包括：
+  - `Qwen2-VL-2B-Instruct`
+  - `Qwen3-VL-2B-Instruct`
+- `Qwen2.5-VL / Llava-Next` 目前仍处于真实 family-loader 验证阶段
 - 因此，第一阶段可以说“代码底座已经完成并经过真实验收”，但不能夸大成“第二阶段冲榜训练已经完成”
 
 ## 二、本轮重点修复的问题
@@ -288,7 +291,7 @@
 
 - 我们还没有完成第二阶段的大规模正式训练
 - 还没有提交完整 MMEB v2 leaderboard 成绩
-- `Qwen2.5-VL / Qwen3-VL / Llava-Next` 目前完成的是 family-loader 真实验证，而不是完整 benchmark 闭环
+- `Qwen2.5-VL / Llava-Next` 目前完成的是 family-loader 真实验证，而不是完整 benchmark 闭环
 - 第二阶段最终 backbone 仍建议和老师进一步确认
 
 ## 六、关键产物位置
@@ -305,3 +308,5 @@
   - `experiments/stage1_validation/backbone_matrix/`
 - 运行时训练 / 推理验证：
   - `experiments/stage1_validation/runtime_outputs/`
+- `qwen3_vl` 全闭环实验：
+  - `experiments/stage1_validation/qwen3_vl_full_loop/`

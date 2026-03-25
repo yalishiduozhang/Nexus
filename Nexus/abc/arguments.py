@@ -1,4 +1,5 @@
 import json
+import os
 import yaml
 import logging
 from pathlib import Path
@@ -6,6 +7,26 @@ from typing import Union
 from dataclasses import dataclass, asdict, fields
 
 logger = logging.getLogger(__name__)
+
+DEFINITE_LOCAL_PATH_KEYS = {
+    "train_data",
+    "eval_data",
+    "output_dir",
+    "dataset_dir",
+    "media_root",
+    "image_root",
+    "video_root",
+    "cache_path",
+    "cache_dir",
+    "corpus_embd_save_dir",
+    "eval_output_dir",
+    "eval_output_path",
+}
+MAYBE_LOCAL_OR_REMOTE_KEYS = {
+    "model_name_or_path",
+    "processor_name_or_path",
+    "embedder_name_or_path",
+}
 
 
 def init_argument(type_, x):
@@ -45,6 +66,44 @@ def init_argument(type_, x):
         if tmp_x is None:
             raise TypeError(f"Failed to init argument {x} ({type(x)}) to {type_}.")
         return tmp_x
+
+
+def _looks_like_remote_reference(value: str) -> bool:
+    return "://" in value
+
+
+def _resolve_local_path_value(value: str, base_dir: Path, force: bool = False) -> str:
+    if value in [None, ""]:
+        return value
+
+    expanded = os.path.expanduser(value)
+    if os.path.isabs(expanded) or _looks_like_remote_reference(expanded):
+        return expanded
+
+    if not force:
+        candidate = base_dir / expanded
+        if not (expanded.startswith(".") or expanded.startswith("..") or candidate.exists()):
+            return value
+
+    return str((base_dir / expanded).resolve())
+
+
+def _resolve_config_paths(config_dict: dict, base_dir: Path) -> dict:
+    resolved = dict(config_dict)
+    for key, value in list(resolved.items()):
+        if value in [None, ""]:
+            continue
+
+        if key in DEFINITE_LOCAL_PATH_KEYS:
+            if isinstance(value, list):
+                resolved[key] = [_resolve_local_path_value(item, base_dir, force=True) for item in value]
+            elif isinstance(value, str):
+                resolved[key] = _resolve_local_path_value(value, base_dir, force=True)
+            continue
+
+        if key in MAYBE_LOCAL_OR_REMOTE_KEYS and isinstance(value, str):
+            resolved[key] = _resolve_local_path_value(value, base_dir, force=False)
+    return resolved
 
 
 @dataclass
@@ -101,7 +160,7 @@ class AbsArguments:
             raise FileNotFoundError(f"{load_path} does not exist.")
 
         with open(load_path, "r", encoding="utf-8") as f:
-            _dict = json.load(f)
+            _dict = _resolve_config_paths(json.load(f), load_path.parent)
             return cls.from_dict(_dict)
 
     @classmethod
@@ -113,5 +172,5 @@ class AbsArguments:
             raise FileNotFoundError(f"{load_path} does not exist.")
 
         with open(load_path, "r", encoding="utf-8") as f:
-            _dict = yaml.safe_load(f)
+            _dict = _resolve_config_paths(yaml.safe_load(f), load_path.parent)
             return cls.from_dict(_dict)

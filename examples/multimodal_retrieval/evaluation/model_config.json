@@ -1,7 +1,7 @@
 {
     "embedder_name_or_path": "./outputs/multimodal_embedder",
     "processor_name_or_path": "./outputs/multimodal_embedder",
-    "model_type": "qwen2_vl",
+    "model_type": "auto",
     "normalize_embeddings": true,
     "pooling_method": "last_token",
     "use_fp16": false,
@@ -21,4 +21,3 @@
     "torch_dtype": "bfloat16",
     "attn_implementation": null
 }
-

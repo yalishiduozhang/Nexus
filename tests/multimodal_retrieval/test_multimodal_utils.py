@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace
 import numpy as np
+import pytest
 import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +13,7 @@ import Nexus
 from Nexus.modules.multimodal import (
     build_media_base_dir,
     build_prefixed_multimodal_group,
+    _get_registered_conditional_generation_model_class,
     load_multimodal_backbone,
     load_multimodal_processor,
     MultimodalProcessorAdapter,
@@ -219,6 +221,14 @@ def test_load_multimodal_processor_falls_back_to_base_model_for_adapter(monkeypa
 
     assert processor == {"loaded_from": "/tmp/base-model"}
     assert attempted_paths == [str(adapter_dir), "/tmp/base-model"]
+
+
+def test_missing_qwen3_loader_reports_version_hint():
+    with pytest.raises(ImportError, match="transformers>=4.57.3"):
+        _get_registered_conditional_generation_model_class(
+            "qwen3_vl",
+            transformers_module=SimpleNamespace(__version__="4.52.3"),
+        )
 
 
 def test_encode_single_device_casts_bfloat16_before_numpy():

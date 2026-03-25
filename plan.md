@@ -65,8 +65,10 @@
 - 中文计划
 - 中文结果
 - runtime 验证报告
+- 详细实验分析文档
 - 配置化训练 / 评测 smoke 配置
 - 真实 MMEB 子集评测结果
+- `qwen3_vl` 闭环实验结果
 - backbone 与环境说明
 
 ## 四、当前已经真实确认的事实
@@ -76,11 +78,13 @@
 - `pytest tests/multimodal_retrieval -q` 通过，结果为 `37 passed`
 - `tools/multimodal_retrieval/validate_stack.sh` 通过
 - `Qwen2-VL-2B-Instruct` 已完成真实训练 / 推理 / 本地评测 / 真实 MMEB 子集评测闭环
+- `Qwen3-VL-2B-Instruct` 已在隔离环境中完成真实 smoke 训练 / 重载 / 本地评测 / 真实 MMEB 子集评测闭环
 - LoRA 输出目录可以直接被重新加载做后续推理与评测
 - 真实 public train 子集准备成功
 - MMEB image / video / visdoc 评测准备工具真实可用
 - `ViDoRe_arxivqa` 真实 MMEB 子集 end-to-end eval 已通过
 - `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 四个 family 都完成了真实 backbone 加载验证
+- `experiments/stage1_validation/experiment_analysis.md` 已形成逐实验、逐产物的详细复核记录
 
 ## 五、当前仍需诚实保留的边界
 
@@ -89,7 +93,7 @@
 - 第二阶段大规模正式训练
 - 完整 MMEB v2 leaderboard 提交
 - 与 `Qwen3-VL-Embedding-8B` 的正式分数对比
-- `Qwen2.5-VL / Qwen3-VL / Llava-Next` 的完整 benchmark 闭环
+- `Qwen2.5-VL / Llava-Next` 的完整 benchmark 闭环
 
 当前最准确的表述是：
 

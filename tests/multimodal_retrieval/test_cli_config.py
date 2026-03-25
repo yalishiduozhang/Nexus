@@ -19,6 +19,9 @@ def test_train_cli_accepts_split_json_configs(tmp_path):
     model_config = tmp_path / "model.json"
     data_config = tmp_path / "data.json"
     training_config = tmp_path / "training.json"
+    train_data = tmp_path / "dataset" / "train.jsonl"
+    train_data.parent.mkdir(parents=True)
+    train_data.write_text("{}", encoding="utf-8")
 
     write_json(
         model_config,
@@ -30,13 +33,13 @@ def test_train_cli_accepts_split_json_configs(tmp_path):
     write_json(
         data_config,
         {
-            "train_data": ["examples/multimodal_retrieval/data/train.jsonl"],
+            "train_data": ["dataset/train.jsonl"],
         },
     )
     write_json(
         training_config,
         {
-            "output_dir": str(tmp_path / "output"),
+            "output_dir": "output",
             "overwrite_output_dir": True,
         },
     )
@@ -53,25 +56,29 @@ def test_train_cli_accepts_split_json_configs(tmp_path):
     )
 
     assert model_args.model_name_or_path == "Qwen/Qwen2-VL-2B-Instruct"
-    assert data_args.train_data == ["examples/multimodal_retrieval/data/train.jsonl"]
+    assert data_args.train_data == [str(train_data.resolve())]
     assert training_args.output_dir == str(tmp_path / "output")
 
 
 def test_eval_cli_accepts_json_configs_without_onnx(tmp_path):
     eval_config = tmp_path / "eval.json"
     model_config = tmp_path / "model.json"
+    dataset_dir = tmp_path / "dataset"
+    dataset_dir.mkdir()
+    model_dir = tmp_path / "model_dir"
+    model_dir.mkdir()
 
     write_json(
         eval_config,
         {
             "eval_name": "toy_eval",
-            "dataset_dir": "examples/multimodal_retrieval/data/eval",
+            "dataset_dir": "dataset",
         },
     )
     write_json(
         model_config,
         {
-            "embedder_name_or_path": "Qwen/Qwen2-VL-2B-Instruct",
+            "embedder_name_or_path": "./model_dir",
         },
     )
 
@@ -85,7 +92,8 @@ def test_eval_cli_accepts_json_configs_without_onnx(tmp_path):
     )
 
     assert eval_args.eval_name == "toy_eval"
-    assert model_args.embedder_name_or_path == "Qwen/Qwen2-VL-2B-Instruct"
+    assert eval_args.dataset_dir == str(dataset_dir.resolve())
+    assert model_args.embedder_name_or_path == str(model_dir.resolve())
 
 
 def test_training_import_patches_accelerate_unwrap_model_signature():

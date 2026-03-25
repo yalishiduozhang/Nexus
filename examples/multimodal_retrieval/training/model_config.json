@@ -1,7 +1,7 @@
 {
     "model_name_or_path": "Qwen/Qwen2-VL-2B-Instruct",
     "processor_name_or_path": "Qwen/Qwen2-VL-2B-Instruct",
-    "model_type": "qwen2_vl",
+    "model_type": "auto",
     "cache_dir": null,
     "trust_remote_code": true,
     "torch_dtype": "bfloat16",
@@ -13,4 +13,3 @@
     "lora_dropout": 0.05,
     "lora_target_modules": "q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj"
 }
-

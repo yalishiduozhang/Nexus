@@ -1,11 +1,21 @@
+import os
+from pathlib import Path
+
 from Nexus import MultimodalEmbedder
 
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+MEDIA_ROOT = REPO_ROOT / "examples" / "multimodal_retrieval" / "data" / "media"
+
+
 def main():
+    model_name_or_path = os.getenv("MODEL_NAME_OR_PATH", "Qwen/Qwen2-VL-2B-Instruct")
+    processor_name_or_path = os.getenv("PROCESSOR_NAME_OR_PATH", model_name_or_path)
+    model_type = os.getenv("MODEL_TYPE", "auto")
     model = MultimodalEmbedder(
-        model_name_or_path="Qwen/Qwen2-VL-2B-Instruct",
-        processor_name_or_path="Qwen/Qwen2-VL-2B-Instruct",
-        model_type="qwen2_vl",
+        model_name_or_path=model_name_or_path,
+        processor_name_or_path=processor_name_or_path,
+        model_type=model_type,
         trust_remote_code=True,
         normalize_embeddings=True,
         query_max_length=512,
@@ -15,21 +25,21 @@ def main():
 
     queries = [
         {
-            "text": "Find the matching sneaker",
-            "images": ["examples/multimodal_retrieval/data/media/query_0001.jpg"],
+            "text": "Find the matching color grid",
+            "images": [str(MEDIA_ROOT / "query.ppm")],
         },
         {
-            "text": "A red backpack with multiple pockets",
+            "text": "Retrieve the reference grid with a red corner",
         },
     ]
     passages = [
         {
-            "text": "White sneaker with orange sole",
-            "images": ["examples/multimodal_retrieval/data/media/target_0001.jpg"],
+            "text": "The reference grid with a red corner and green center",
+            "images": [str(MEDIA_ROOT / "doc.ppm")],
         },
         {
-            "text": "Red hiking backpack",
-            "images": ["examples/multimodal_retrieval/data/media/target_0002.jpg"],
+            "text": "An alternate grid dominated by blue pixels",
+            "images": [str(MEDIA_ROOT / "neg.ppm")],
         },
     ]
 
@@ -41,4 +51,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

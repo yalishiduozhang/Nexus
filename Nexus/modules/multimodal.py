@@ -94,16 +94,37 @@ def _maybe_load_registered_conditional_generation_model(
     load_kwargs: Dict[str, Any],
 ):
     model_type = infer_multimodal_model_type(config)
+    model_cls = _get_registered_conditional_generation_model_class(model_type)
+    if model_cls is None:
+        return None
+    return model_cls.from_pretrained(model_name_or_path, **load_kwargs)
+
+
+def _get_registered_conditional_generation_model_class(
+    model_type: str,
+    transformers_module=None,
+):
     class_name = CONDITIONAL_GENERATION_MODEL_TYPES.get(model_type)
     if class_name is None:
         return None
 
-    import transformers
+    if transformers_module is None:
+        import transformers as transformers_module
 
-    model_cls = getattr(transformers, class_name, None)
-    if model_cls is None:
-        return None
-    return model_cls.from_pretrained(model_name_or_path, **load_kwargs)
+    model_cls = getattr(transformers_module, class_name, None)
+    if model_cls is not None:
+        return model_cls
+
+    transformers_version = getattr(transformers_module, "__version__", "unknown")
+    if model_type == "qwen3_vl":
+        version_hint = "transformers>=4.57.3"
+    else:
+        version_hint = "a newer transformers version with the required multimodal classes"
+    raise ImportError(
+        f"Model type '{model_type}' requires `{class_name}`, but it is unavailable in "
+        f"transformers {transformers_version}. Install Nexus with `pip install -e .[multimodal]` "
+        f"or upgrade to {version_hint}."
+    )
 
 
 def load_multimodal_backbone(

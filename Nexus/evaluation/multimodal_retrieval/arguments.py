@@ -8,6 +8,8 @@ from Nexus.abc.evaluation import AbsEvalArguments
 
 
 def load_config(file_path, config_class):
+    if hasattr(config_class, "from_json"):
+        return config_class.from_json(file_path)
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return config_class(**data)

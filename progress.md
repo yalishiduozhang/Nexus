@@ -235,9 +235,9 @@
 
 当前可以真实确认的边界：
 
-- `Qwen2-VL-2B-Instruct` 已完成真实 smoke 闭环验证
+- `Qwen2-VL-2B-Instruct` 与 `Qwen3-VL-2B-Instruct` 都已完成真实 smoke 闭环验证
 - `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 已完成代码层适配
-- 但除 `Qwen2-VL-2B-Instruct` 外，其他 backbone 目前尚未逐个做同等级别真实验收
+- `Qwen2.5-VL` 与 `Llava-Next` 目前仍未逐个完成同等级别真实 smoke 验收
 
 当前仍建议后续继续确认的事项：
 
@@ -289,3 +289,43 @@
 - `Qwen2-VL-2B-Instruct` 已完成完整闭环验证
 - 四个 backbone family 都完成了真实加载验证
 - 第二阶段正式训练仍需等待最终 backbone 决策和训练资源方案
+
+### 十一、`qwen3_vl` smoke 全闭环与 example 鲁棒性补强
+
+已完成：
+
+- 下载并本地化 `Qwen/Qwen3-VL-2B-Instruct` 到：
+  - `/tmp/qwen3vl2b_instruct_local`
+- 在隔离环境 `/tmp/nexus_stage1_tf457_env` 中完成：
+  - `qwen3_vl` base toy eval
+  - `qwen3_vl` one-step LoRA smoke 训练
+  - `qwen3_vl` LoRA 输出目录重载
+  - `qwen3_vl` base + adapter 本地 toy eval
+  - `qwen3_vl` 真实 MMEB 子集 `ViDoRe_arxivqa` base eval
+- 修复 example 层隐患：
+  - config example 写死 `qwen2_vl`
+  - inference example 指向不存在的媒体路径
+  - config-file 相对路径依赖当前工作目录
+
+新增产物：
+
+- `experiments/stage1_validation/qwen3_vl_full_loop/`
+- `experiments/stage1_validation/experiment_analysis.md`
+
+关键结果：
+
+- `qwen3_vl` runtime validation embedding 维度：
+  - `2048`
+- `qwen3_vl` toy eval：
+  - `ndcg_at_10 = 1.0`
+  - `recall_at_10 = 1.0`
+- `qwen3_vl` 真实 MMEB 子集 `ViDoRe_arxivqa`：
+  - `ndcg_at_10 = 81.546`
+  - `recall_at_10 = 100.000`
+
+更新后的最准确结论：
+
+- 第一阶段代码底座已经完成
+- `Qwen2-VL-2B-Instruct` 与 `Qwen3-VL-2B-Instruct` 都已完成 smoke 级完整闭环验证
+- `Qwen2.5-VL / Llava-Next` 已完成真实 family-loader 验证
+- 对 `qwen3_vl` 旧版 `transformers` 环境会给出明确安装提示，避免误导性回退错误

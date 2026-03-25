@@ -1,0 +1,17 @@
+{
+    "eval_name": "ViDoRe_arxivqa_qwen3_base",
+    "model_name": "qwen3vl2b_instruct_local",
+    "reranker_name": "NoReranker",
+    "split": "test",
+    "dataset_name": "ViDoRe_arxivqa",
+    "search_results": {
+        "0": {
+            "0": 0.8240013122558594,
+            "1": 0.8036700487136841
+        },
+        "1": {
+            "0": 0.8204155564308167,
+            "1": 0.8006869554519653
+        }
+    }
+}

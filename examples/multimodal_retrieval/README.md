@@ -73,6 +73,7 @@ If your converted dataset stores JSONL files and media files under different dir
 ## Quick start
 
 - A tiny local smoke dataset is bundled under [`data/`](./data/) so the example configs have concrete paths to point at.
+- The example JSON configs now resolve relative paths against the config file directory, so they can be launched from outside the repo root as well.
 - Config-file entrypoints: [`training/run_single_device.sh`](./training/run_single_device.sh) and [`evaluation/run_local.sh`](./evaluation/run_local.sh)
 - CLI-style training: [`training/run_qwen_vl_lora.sh`](./training/run_qwen_vl_lora.sh)
 - CLI-style evaluation: [`evaluation/run_local_eval.sh`](./evaluation/run_local_eval.sh)
