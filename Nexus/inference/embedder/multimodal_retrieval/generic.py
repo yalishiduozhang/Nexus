@@ -270,5 +270,7 @@ class MultimodalEmbedder(AbsEmbedder):
 
         embeddings = torch.cat(encoded_batches, dim=0)
         if convert_to_numpy:
+            if embeddings.dtype in {torch.bfloat16, torch.float16}:
+                embeddings = embeddings.float()
             return embeddings.numpy()
         return embeddings

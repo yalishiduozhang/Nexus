@@ -170,6 +170,28 @@ python tools/multimodal_retrieval/check_idle_gpus.py --input /tmp/gpus.csv
 
 Use these to create an isolated runtime instead of installing into the local `base` environment.
 
+Recommended command:
+
+```bash
+ENV_NAME=nexus-mmeb-stage1 \
+bash tools/multimodal_retrieval/create_conda_env.sh
+```
+
+By default the script will:
+
+- create a fresh isolated conda environment
+- install `.[eval,multimodal]`
+- print key package versions
+- run `validate_stack.sh` inside that environment
+
+If you only want the installation step and prefer to validate later, disable the final check:
+
+```bash
+ENV_NAME=nexus-mmeb-stage1 \
+RUN_VALIDATION=0 \
+bash tools/multimodal_retrieval/create_conda_env.sh
+```
+
 ### `download_public_data.sh`
 
 Wrapper around `prepare_public_data.py` for common shell-driven workflows.
@@ -194,3 +216,4 @@ bash tools/multimodal_retrieval/validate_stack.sh
 ## Environment
 
 Run these tools inside an isolated environment. Do not install dependencies into the local `base` environment.
+For the final Stage 2 competitive path, prefer a fresh environment that satisfies the multimodal extra requirements, especially if the chosen backbone moves from `Qwen2-VL` smoke validation to the `Qwen3-VL` family.

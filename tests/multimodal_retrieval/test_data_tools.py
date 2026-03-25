@@ -2,6 +2,7 @@ import importlib.util
 import json
 from pathlib import Path
 import types
+import numpy as np
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -47,6 +48,10 @@ prepare_eval_tool = load_module_from_path(
 gpu_tool = load_module_from_path(
     "check_idle_gpus",
     "tools/multimodal_retrieval/check_idle_gpus.py",
+)
+text_eval_utils = load_module_from_path(
+    "text_retrieval_utils",
+    "Nexus/evaluation/text_retrieval/utils.py",
 )
 
 
@@ -402,3 +407,50 @@ def test_check_idle_gpus_parses_csv_dump():
         {"index": 0, "memory_used": 15, "utilization": 0},
         {"index": 1, "memory_used": 2048, "utilization": 35},
     ]
+
+
+def test_check_idle_gpus_query_falls_back_when_nounits_format_fails(monkeypatch):
+    commands = []
+
+    class FakeCompletedProcess:
+        def __init__(self, stdout):
+            self.stdout = stdout
+
+    def fake_run(command, check, capture_output, text):
+        commands.append(command)
+        if command[-1] == "--format=csv,noheader,nounits":
+            raise gpu_tool.subprocess.CalledProcessError(returncode=255, cmd=command)
+        return FakeCompletedProcess("0, 15 MiB, 0 %\n1, 1024 MiB, 5 %\n")
+
+    monkeypatch.setattr(gpu_tool.subprocess, "run", fake_run)
+
+    gpus = gpu_tool.query_gpus()
+
+    assert gpus == [
+        {"index": 0, "memory_used": 15, "utilization": 0},
+        {"index": 1, "memory_used": 1024, "utilization": 5},
+    ]
+    assert commands[0][-1] == "--format=csv,noheader,nounits"
+    assert commands[1][-1] == "--format=csv,noheader"
+
+
+def test_text_eval_utils_fallback_to_numpy_when_faiss_is_missing(monkeypatch):
+    monkeypatch.setattr(text_eval_utils, "faiss", None)
+
+    index = text_eval_utils.index(
+        corpus_embeddings=np.array(
+            [
+                [1.0, 0.0],
+                [0.0, 1.0],
+            ],
+            dtype=np.float32,
+        )
+    )
+    scores, indices = text_eval_utils.search(
+        faiss_index=index,
+        k=1,
+        query_embeddings=np.array([[1.0, 0.0]], dtype=np.float32),
+    )
+
+    assert scores.shape == (1, 1)
+    assert indices.tolist() == [[0]]

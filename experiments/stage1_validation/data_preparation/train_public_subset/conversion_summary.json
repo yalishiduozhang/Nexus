@@ -1,0 +1,20 @@
+[
+  {
+    "source_name": "HatefulMemes",
+    "modality": "image",
+    "status": "converted",
+    "count": 8500,
+    "output": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/data_preparation/train_public_subset/image/HatefulMemes.jsonl",
+    "input": "/tmp/public_mmeb_raw/vlm2vec_train/MMEB-train/HatefulMemes",
+    "weight": 1
+  },
+  {
+    "source_name": "HatefulMemes",
+    "modality": "visdoc",
+    "status": "converted",
+    "count": 8500,
+    "output": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/data_preparation/train_public_subset/visdoc/HatefulMemes.jsonl",
+    "input": "/tmp/public_mmeb_raw/vlm2vec_train/MMEB-train/HatefulMemes",
+    "weight": 1
+  }
+]

@@ -1,5 +1,7 @@
 from pathlib import Path
 import sys
+from types import SimpleNamespace
+import numpy as np
 import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -10,6 +12,8 @@ import Nexus
 from Nexus.modules.multimodal import (
     build_media_base_dir,
     build_prefixed_multimodal_group,
+    load_multimodal_backbone,
+    load_multimodal_processor,
     MultimodalProcessorAdapter,
     normalize_multimodal_item,
 )
@@ -140,3 +144,107 @@ def test_processor_adapter_batches_visual_tensors_without_processor_pad():
     assert tuple(batch["input_ids"].shape) == (2, 3)
     assert tuple(batch["pixel_values"].shape) == (2, 4, 8)
     assert tuple(batch["image_grid_thw"].shape) == (2, 3)
+
+
+def test_load_multimodal_backbone_supports_peft_adapter_dirs(tmp_path, monkeypatch):
+    adapter_dir = tmp_path / "adapter"
+    adapter_dir.mkdir()
+    (adapter_dir / "adapter_config.json").write_text("{}", encoding="utf-8")
+
+    recorded = {}
+
+    class DummyConfig:
+        model_type = "qwen2_vl"
+
+    def fake_auto_config(path, **kwargs):
+        recorded["config_path"] = path
+        return DummyConfig()
+
+    def fake_registered_loader(config, model_name_or_path, load_kwargs):
+        recorded["base_model_path"] = model_name_or_path
+        return "base-model"
+
+    def fake_peft_from_pretrained(model, adapter_path, is_trainable=False):
+        recorded["adapter_model"] = model
+        recorded["adapter_path"] = adapter_path
+        recorded["is_trainable"] = is_trainable
+        return "wrapped-model"
+
+    monkeypatch.setattr(
+        "Nexus.modules.multimodal._maybe_load_peft_config",
+        lambda *args, **kwargs: SimpleNamespace(base_model_name_or_path="/tmp/base-model"),
+    )
+    monkeypatch.setattr("Nexus.modules.multimodal.AutoConfig.from_pretrained", fake_auto_config)
+    monkeypatch.setattr("Nexus.modules.multimodal._maybe_load_registered_conditional_generation_model", fake_registered_loader)
+
+    import peft
+
+    monkeypatch.setattr(peft.PeftModel, "from_pretrained", fake_peft_from_pretrained)
+
+    model, config = load_multimodal_backbone(
+        str(adapter_dir),
+        model_type="qwen2_vl",
+        peft_is_trainable=True,
+    )
+
+    assert model == "wrapped-model"
+    assert config.model_type == "qwen2_vl"
+    assert recorded["config_path"] == "/tmp/base-model"
+    assert recorded["base_model_path"] == "/tmp/base-model"
+    assert recorded["adapter_model"] == "base-model"
+    assert recorded["adapter_path"] == str(adapter_dir)
+    assert recorded["is_trainable"] is True
+
+
+def test_load_multimodal_processor_falls_back_to_base_model_for_adapter(monkeypatch, tmp_path):
+    adapter_dir = tmp_path / "adapter"
+    adapter_dir.mkdir()
+    (adapter_dir / "adapter_config.json").write_text("{}", encoding="utf-8")
+
+    attempted_paths = []
+
+    def fake_auto_processor(path, **kwargs):
+        attempted_paths.append(path)
+        if path == str(adapter_dir):
+            raise ValueError("adapter dir does not contain a processor")
+        return {"loaded_from": path}
+
+    monkeypatch.setattr("Nexus.modules.multimodal.AutoProcessor.from_pretrained", fake_auto_processor)
+    monkeypatch.setattr(
+        "Nexus.modules.multimodal._maybe_load_peft_config",
+        lambda *args, **kwargs: SimpleNamespace(base_model_name_or_path="/tmp/base-model"),
+    )
+
+    processor = load_multimodal_processor(str(adapter_dir))
+
+    assert processor == {"loaded_from": "/tmp/base-model"}
+    assert attempted_paths == [str(adapter_dir), "/tmp/base-model"]
+
+
+def test_encode_single_device_casts_bfloat16_before_numpy():
+    from Nexus.inference.embedder.multimodal_retrieval.generic import MultimodalEmbedder
+
+    class FakeModel:
+        def eval(self):
+            return self
+
+        def to(self, device):
+            return self
+
+    embedder = MultimodalEmbedder.__new__(MultimodalEmbedder)
+    embedder.model = FakeModel()
+    embedder.use_fp16 = False
+    embedder.pool = None
+    embedder._encode_batch = lambda *args, **kwargs: torch.ones((1, 4), dtype=torch.bfloat16)
+
+    embeddings = MultimodalEmbedder.encode_single_device(
+        embedder,
+        inputs=[{"text": "query"}],
+        batch_size=1,
+        max_length=8,
+        convert_to_numpy=True,
+        device="cpu",
+    )
+
+    assert isinstance(embeddings, np.ndarray)
+    assert embeddings.dtype == np.float32

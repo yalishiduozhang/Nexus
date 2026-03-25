@@ -1,0 +1,13 @@
+{
+  "run_type": "config_file_training_smoke",
+  "model_config": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/configs/train_model_config.local.json",
+  "data_config": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/configs/train_data_config.local.json",
+  "training_config": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/configs/train_training_config.local.json",
+  "cuda_visible_devices": "6",
+  "output_dir": "/tmp/nexus_stage1_config_train",
+  "train_loss": 0.57421875,
+  "train_runtime": 0.9778,
+  "train_samples_per_second": 1.023,
+  "train_steps_per_second": 1.023,
+  "status": "success"
+}

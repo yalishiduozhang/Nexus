@@ -1,0 +1,14 @@
+{
+  "train_data": [],
+  "cache_path": "./.cache",
+  "media_root": null,
+  "train_group_size": 4,
+  "query_max_len": 512,
+  "passage_max_len": 1024,
+  "query_instruction_for_retrieval": "Represent this multimodal query for retrieving matching targets: ",
+  "query_instruction_format": "{}{}",
+  "passage_instruction_for_retrieval": null,
+  "passage_instruction_format": "{}{}",
+  "knowledge_distillation": false,
+  "shuffle_ratio": 0.0
+}

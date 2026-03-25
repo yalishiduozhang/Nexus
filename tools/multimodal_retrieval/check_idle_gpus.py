@@ -39,13 +39,27 @@ def parse_gpu_lines(lines: List[str]):
 
 
 def query_gpus():
-    command = [
-        "nvidia-smi",
-        "--query-gpu=index,memory.used,utilization.gpu",
-        "--format=csv,noheader,nounits",
+    commands = [
+        [
+            "nvidia-smi",
+            "--query-gpu=index,memory.used,utilization.gpu",
+            "--format=csv,noheader,nounits",
+        ],
+        [
+            "nvidia-smi",
+            "--query-gpu=index,memory.used,utilization.gpu",
+            "--format=csv,noheader",
+        ],
     ]
-    completed = subprocess.run(command, check=True, capture_output=True, text=True)
-    return parse_gpu_lines(completed.stdout.strip().splitlines())
+    last_error = None
+    for command in commands:
+        try:
+            completed = subprocess.run(command, check=True, capture_output=True, text=True)
+            return parse_gpu_lines(completed.stdout.strip().splitlines())
+        except subprocess.CalledProcessError as exc:
+            last_error = exc
+    assert last_error is not None
+    raise last_error
 
 
 def main():

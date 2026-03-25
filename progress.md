@@ -1,36 +1,52 @@
-# Progress Log
+# 项目进展记录
+
+更新时间：2026-03-25
+
+本文档只记录已经真实发生并确认过的工作，不把“计划做”“可能做”写成“已经完成”。
 
 ## 2026-03-24
 
-### Completed before this round
+### 一、前置审查与方向确认
 
-- Audited `Nexus`, `FlagEmbedding`, and `VLM2Vec` to decide the integration direction.
-- Implemented the first multimodal retrieval stack in Nexus.
-- Added example train/infer/eval configs and scripts.
-- Created the first local milestone commit:
-  - `8a5d364` `Add multimodal embedding pipeline and examples`
-- Produced shareable archive artifacts for reporting.
+已完成：
 
-### Review findings recorded in this round
+- 审查 `Nexus`、`FlagEmbedding`、`VLM2Vec`，确定整体集成方向。
+- 明确本项目采用的工程思路：
+  - 以 `Nexus` 为主仓库
+  - 参考 `FlagEmbedding` 的 train / inference / evaluation 分层方式
+  - 面向 MMEB v2 的真实任务形态补齐工具和链路
 
-- Raw `video` / `video_path` / `videos` inputs were not supported end to end.
-- `Qwen3-VL` model type was not registered in the generic multimodal loading path.
-- Local evaluation assumed media files always lived under the JSONL directory.
-- The multimodal embedder accepted multiple devices but only used the first one.
+### 二、多模态 embedding 主链路接入
 
-### Work in progress in this round
+已完成：
 
-- Added project-level planning and logging documents:
+- 在 `Nexus` 中新增多模态 embedding 训练链路。
+- 在 `Nexus` 中新增多模态 embedding 推理链路。
+- 在 `Nexus` 中新增多模态 embedding 评测链路。
+- 新增 `examples/multimodal_retrieval/` 示例配置、示例脚本和示例数据。
+
+对应里程碑提交：
+
+- `8a5d364` `Add multimodal embedding pipeline and examples`
+
+### 三、面向 MMEB v2 的能力补齐
+
+已完成：
+
+- 增强多模态字段归一化，支持 image / video / pages 等常见输入形式。
+- 增加原始视频支持和视频相关 chat-template 兼容。
+- 增加 `Qwen3-VL` 相关兼容注册。
+- 让评测支持 `media_root / image_root / video_root`。
+- 修复多设备推理只使用首卡的问题。
+
+### 四、数据工具与文档骨架
+
+已完成：
+
+- 新增项目级文档：
   - `plan.md`
   - `progress.md`
-- Hardened the multimodal utility layer for MMEB v2:
-  - native video normalization
-  - raw video fallback decoding
-  - chat-template updates for video items
-  - Qwen3-VL registration
-- Restored actual multi-device inference behavior in the multimodal embedder.
-- Updated training and evaluation path handling so converted datasets can keep separate media roots.
-- Added data preparation assets:
+- 新增数据相关资产：
   - `docs/multimodal_retrieval/MMEB_v2_data_inventory.md`
   - `docs/multimodal_retrieval/MMEB_v2_manifest.json`
   - `tools/multimodal_retrieval/convert_vlm2vec_train_to_nexus.py`
@@ -38,151 +54,193 @@
   - `tools/multimodal_retrieval/export_mmeb_v2_inventory.py`
   - `tools/multimodal_retrieval/export_mmeb_v2_manifest.py`
   - `tools/multimodal_retrieval/README.md`
-- Added execution-prep assets:
-  - `docs/multimodal_retrieval/training_recipe.md`
-  - `docs/multimodal_retrieval/data_collection_playbook.md`
+
+### 五、环境与共享 GPU 安全工具
+
+已完成：
+
+- 新增：
   - `tools/multimodal_retrieval/check_idle_gpus.py`
   - `tools/multimodal_retrieval/create_conda_env.sh`
-  - `tools/multimodal_retrieval/download_public_data.sh`
   - `tools/multimodal_retrieval/environment.yml`
-- Hardened example training scripts so shared-GPU runs require explicit `CUDA_VISIBLE_DEVICES`.
-- Updated example docs and eval config to reflect the new media-root and video-input support.
-- Ran syntax checks on all touched Python files with `python -m py_compile`.
-- Fixed package import coupling so multimodal modules can be imported without unrelated `onnx` dependencies being installed:
-  - lazy imports in `Nexus/__init__.py`
-  - lazy imports in `Nexus/abc/__init__.py`
-  - lazy imports in `Nexus/abc/inference/__init__.py`
-  - lazy imports in `Nexus/inference/__init__.py`
-  - lazy imports in `Nexus/inference/embedder/__init__.py`
-  - lazy imports in `Nexus/evaluation/multimodal_retrieval/__init__.py`
-- Downgraded `onnx` / `onnxruntime` / `tensorrt` in the generic inference engine to optional imports instead of hard import requirements.
-- Added regression tests under `tests/multimodal_retrieval/` covering:
-  - multimodal normalization with video fields
-  - prefixed query/pos parsing for video inputs
-  - evaluation media-root resolution
-  - conversion-tool helper behavior
-- Fixed cache-path behavior so multimodal and text retrieval evaluation loaders prefer writable cache locations and fall back to `/tmp`.
-- Fixed conversion tools so they also use writable datasets cache directories and can auto-fallback to the only available split when local JSON/JSONL loads as `train`.
-- Added `tools/multimodal_retrieval/validate_stack.sh` to reproduce the validation flow end to end.
-- Verified with the isolated `costa` environment:
-  - `import Nexus` and multimodal module import now succeed
-  - `export_mmeb_v2_inventory.py` runs successfully
-  - `convert_vlm2vec_train_to_nexus.py` CLI runs successfully
-  - `convert_vlm2vec_eval_to_nexus.py` CLI runs successfully
-  - `pytest tests/multimodal_retrieval -q` passes
-  - `validate_stack.sh` passes end to end
+  - `docs/multimodal_retrieval/training_recipe.md`
+  - `docs/multimodal_retrieval/data_collection_playbook.md`
+- 更新示例训练脚本，要求共享 GPU 运行时显式设置 `CUDA_VISIBLE_DEVICES`。
 
-### Pending after this round
+### 六、可选依赖解耦与测试
 
-- Build isolated runtime environments for actual training or evaluation jobs.
-- Execute the conversion scripts and training/evaluation workflows in an environment that includes `transformers`, `datasets`, and `PyYAML`.
-- Decide whether to start large-scale public data download locally or leave actual download to the data-collection owner with the provided manifests and scripts.
-- Run real training and benchmark jobs on idle GPUs only.
+已完成：
+
+- 通过 lazy import 降低与当前任务无关依赖的强耦合：
+  - `onnx`
+  - `onnxruntime`
+  - `tensorrt`
+- 增加多模态回归测试，覆盖：
+  - 视频字段归一化
+  - 前缀 query / pos 解析
+  - 评测媒体根路径解析
+  - 转换脚本关键辅助逻辑
+- 新增 `tools/multimodal_retrieval/validate_stack.sh`，把关键验证流程固化成一键脚本。
+
+### 七、当日验证结果
+
+已完成：
+
+- `python -m py_compile` 覆盖所有触及的 Python 文件。
+- `pytest tests/multimodal_retrieval -q` 通过。
+- `validate_stack.sh` 在隔离环境中通过。
+- `import Nexus` 及多模态模块导入成功。
 
 ## 2026-03-25
 
-### Additional codebase work completed
+### 一、manifest 驱动的数据准备工具继续补齐
 
-- Added manifest/export helper library:
+已完成：
+
+- 新增：
   - `tools/multimodal_retrieval/vlm2vec_manifest_lib.py`
-- Added HF HTTP dataset planner/downloader:
   - `tools/multimodal_retrieval/hf_dataset_manager.py`
-- Added manifest-driven public-data orchestrator:
   - `tools/multimodal_retrieval/prepare_public_data.py`
-- Added local batch train-data converter with stage-config emission:
   - `tools/multimodal_retrieval/prepare_mmeb_v2_train_data.py`
-- Added config-file CLI parsing for multimodal train/eval entrypoints:
-  - `Nexus/training/embedder/multimodal_retrieval/__main__.py`
-  - `Nexus/evaluation/multimodal_retrieval/__main__.py`
-- Added a bundled example train/eval dataset under `examples/multimodal_retrieval/data/`.
-- Further reduced eager optional imports on the text-retrieval side so multimodal config parsing does not require unrelated backends up front.
-- Added Git LFS pointer detection to the conversion tools so metadata-only clones fail with a clear action instead of a low-level parquet error.
+- 在多模态 train / eval 入口中增加 split-json 配置文件解析能力。
+- 补充本地 bundled 示例 train / eval 数据。
+- 在转换工具中增加 Git LFS pointer 检测，避免元数据克隆导致低层 parquet 报错。
 
-### Tooling fixes completed
+### 二、数据工具细节修复
 
-- Fixed the train/eval conversion CLIs so local input directories can be scanned recursively for parquet/json/jsonl shards instead of only the top level.
-- Fixed `prepare_public_data.py` so it can consume an older manifest file and auto-augment missing download metadata.
-- Fixed `hf_dataset_manager.py` dataset URL construction for Hugging Face tree/resolve endpoints.
-- Added `--input` support to `check_idle_gpus.py` so GPU selection can still be computed from a pre-captured `nvidia-smi` CSV dump when direct probing fails inside an isolated environment.
+已完成：
 
-### Validation completed in this round
+- 修复本地输入目录递归扫描，只扫顶层的问题。
+- 修复旧 manifest 缺少下载元信息时的兼容处理。
+- 修复 Hugging Face 数据集 URL 规划逻辑。
+- 为 `check_idle_gpus.py` 增加 `--input` 快照输入模式。
 
-- `pytest tests/multimodal_retrieval -q` passes with 18 tests.
-- `tools/multimodal_retrieval/validate_stack.sh` passes end to end in the isolated `costa` environment.
-- `python -m Nexus.evaluation.multimodal_retrieval --help` now works without `onnx` or `faiss` installed.
-- Regenerated:
-  - `docs/multimodal_retrieval/MMEB_v2_manifest.json`
-  - `docs/multimodal_retrieval/MMEB_v2_inventory_generated.md`
+### 三、真实 public data smoke
 
-### Real public-data smoke result
+已完成：
 
-- Verified that the public-data path is executable on a real MMEB train subset.
-- Planned, downloaded, and converted:
-  - source: `TIGER-Lab/MMEB-train / HatefulMemes / original`
-  - raw artifact: `/tmp/public_mmeb_raw/vlm2vec_train/MMEB-train/HatefulMemes/original-00000-of-00001.parquet`
-  - Nexus train output: `/tmp/public_mmeb_nexus/train/image/HatefulMemes.jsonl`
-- Verified that `prepare_mmeb_v2_train_data.py` can transform the downloaded raw subset into stage-ready outputs and generated stage configs:
-  - `/tmp/public_mmeb_stage_train/image/HatefulMemes.jsonl`
-  - `/tmp/public_mmeb_stage_configs/`
+- 使用真实 MMEB train 子集做本地 smoke：
+  - 来源：`TIGER-Lab/MMEB-train / HatefulMemes / original`
+- 成功下载并转换为 Nexus 训练格式。
+- 成功生成 stage 训练配置。
 
-### Current blockers after this round
+### 四、MMEB v2 eval-prep 工具
 
-- Python-level Hugging Face access inside the sandbox still fails for SDK-style networking, so actual public-data download in this environment requires unsandboxed execution.
-- Full public data collection still exceeds the free disk currently available on this machine, so selective download remains the only safe local path right now.
-- A real `Qwen/Qwen2-VL-2B-Instruct` smoke inference attempt was started on idle GPU `2`, but it was stopped after stalling in backbone download. No completed backbone-level run is available yet.
+已完成：
 
-### Additional eval-prep work completed later in this round
+- 新增 `tools/multimodal_retrieval/prepare_mmeb_v2_eval_data.py`
+- 为 image / video / visdoc 代表数据集完成 dry-run 验证。
+- 更新 `tools/multimodal_retrieval/README.md` 与 `validate_stack.sh`。
 
-- Added manifest-driven MMEB v2 eval batch conversion:
-  - `tools/multimodal_retrieval/prepare_mmeb_v2_eval_data.py`
-- Added regression coverage for:
-  - local image-task eval source resolution
-  - video frame-root preference in eval configs
-  - remote fallback command generation
-  - single-dataset eval config emission
-- Updated:
-  - `tools/multimodal_retrieval/README.md`
-  - `tools/multimodal_retrieval/validate_stack.sh`
+对应验证：
 
-### Validation completed after the eval-prep addition
+- `HatefulMemes`
+- `MSVD`
+- `ViDoRe_arxivqa`
 
-- `pytest tests/multimodal_retrieval -q` now passes with 22 tests.
-- `prepare_mmeb_v2_eval_data.py` dry-run succeeds on representative MMEB datasets:
-  - `HatefulMemes`
-  - `MSVD`
-  - `ViDoRe_arxivqa`
-- `tools/multimodal_retrieval/validate_stack.sh` now covers the eval-prep dry-run and passes end to end.
+### 五、本地离线 backbone smoke 训练
 
-### Current live execution state
+已完成：
 
-- Local download of `Qwen/Qwen2-VL-2B-Instruct` to `/tmp/qwen2vl2b_local` completed successfully.
-- Verified both weight shards against `model.safetensors.index.json` and switched smoke runs fully offline.
+- 本地离线下载并校验 `Qwen/Qwen2-VL-2B-Instruct` 到 `/tmp/qwen2vl2b_local`
+- 修复真实 smoke 训练过程中暴露出的兼容性问题：
+  - `Accelerator.unwrap_model(..., keep_torch_compile=...)` 兼容补丁
+  - 多模态 `media_root` / `image_root` / `video_root` 解析修复
+  - Qwen2-VL visual batching 在 processor 缺少 `.pad()` 时的兼容路径
+  - 示例图片尺寸过小导致预处理失败的问题
+  - 示例训练数据的媒体路径修复
 
-### Backbone smoke-training fixes completed
+结果：
 
-- Added a compatibility patch so Nexus training remains usable with the current local `transformers==4.52.3` and `accelerate==0.29.1` pair:
-  - patched `Accelerator.unwrap_model(..., keep_torch_compile=...)` compatibility in `Nexus/abc/training/trainer.py`
-- Fixed multimodal root resolution so explicit `media_root` / `image_root` / `video_root` overrides can use existing cwd-relative paths without being re-joined onto dataset-file directories.
-- Fixed the Qwen2-VL visual batching path when the processor lacks a native `.pad()` method:
-  - text fields are padded with the tokenizer
-  - visual tensors and `*_grid_thw` values are concatenated explicitly
-- Regenerated the bundled example PPM media to `32x32` so Qwen2-VL image preprocessing accepts the smoke inputs.
-- Simplified the bundled train JSONL media paths to match the configured `media_root`.
+- 本地离线 `Qwen2-VL-2B-Instruct` one-step LoRA smoke finetune 成功
+- 输出目录成功写出
+- 报告 `train_loss = 0.474609375`
 
-### Smoke-training validation completed
+对应提交：
 
-- Re-ran the multimodal smoke finetune fully offline on an explicitly idle single GPU (`CUDA_VISIBLE_DEVICES=0`).
-- Command target:
-  - local model: `/tmp/qwen2vl2b_local`
-  - train data: `examples/multimodal_retrieval/data/train.jsonl`
-  - output: `/tmp/nexus_mm_smoke_train`
-- Result:
-  - `max_steps=1` completed successfully
-  - reported `train_loss`: `0.474609375`
-  - training artifacts were written successfully after the LoRA save path completed
+- `6f534aa` `Validate offline Qwen2-VL smoke training`
 
-### Next execution target
+### 六、第一阶段全面验收与运行时修复
 
-- Expand public train-data smoke coverage beyond `HatefulMemes`.
-- Prepare the first reusable local eval subset bundle from the manifest-driven eval-prep tooling.
-- Move from bundled example smoke data to a small real multimodal mixture for the next LoRA run.
+已完成：
+
+- 建立专门验收目录：
+  - `experiments/stage1_validation/`
+- 在真实运行时暴露并修复的问题包括：
+  - LoRA 输出目录不能直接被加载
+  - adapter 目录缺少 processor 时不能自动回退到 base model processor
+  - 已是 PEFT 模型时重复套 LoRA
+  - `bf16` 推理输出直接转 numpy 失败
+  - `faiss` 顶层强依赖导致评测路径不可用
+  - `pytrec_eval` 顶层强导入导致部分工具 / 测试导入失败
+  - 多进程 embedder 结束时的 semaphore warning
+  - `nvidia-smi --format=csv,noheader,nounits` 在当前环境中的兼容性问题
+
+相关新增或重点变更：
+
+- `Nexus/modules/multimodal.py`
+- `Nexus/training/embedder/multimodal_retrieval/modeling.py`
+- `Nexus/inference/embedder/multimodal_retrieval/generic.py`
+- `Nexus/evaluation/text_retrieval/utils.py`
+- `Nexus/abc/inference/embedder/AbsEmbedder.py`
+- `tools/multimodal_retrieval/runtime_validation.py`
+- `tests/multimodal_retrieval/test_multimodal_utils.py`
+- `tests/multimodal_retrieval/test_data_tools.py`
+
+### 七、第一阶段真实验收结果
+
+已确认：
+
+- `pytest tests/multimodal_retrieval -q` 通过，结果为 `31 passed`
+- `tools/multimodal_retrieval/validate_stack.sh` 通过
+- 使用空闲 GPU `4,5` 完成基础模型与多设备推理一致性验证
+- 使用空闲 GPU `6` 完成配置文件模式训练 smoke
+- 基础模型和 LoRA 输出目录都已完成本地评测
+- 配置化训练产物已完成重新加载与评测
+- 真实 public train 子集准备成功写入 `experiments/stage1_validation/data_preparation/`
+- MMEB eval prep dry-run 成功写入 `experiments/stage1_validation/data_preparation/eval_prep/`
+
+关键结果：
+
+- embedding 维度：`1536`
+- 多设备一致性：
+  - `query_allclose = true`
+  - `passage_allclose = true`
+  - `max_query_abs_diff = 0.0`
+  - `max_passage_abs_diff = 0.0`
+- toy eval：
+  - `ndcg_at_10 = 1.0`
+  - `recall_at_10 = 1.0`
+
+### 八、环境与汇报文档补强
+
+已完成：
+
+- 新增：
+  - `experiments/stage1_validation/environment_and_backbone.md`
+- 该文档专门说明：
+  - 当前代码层支持哪些 backbone family
+  - 当前真实完成闭环验证的是哪个 backbone
+  - 老师尚未唯一指定最终 backbone 对第一阶段和第二阶段分别有什么影响
+- 更新 `tools/multimodal_retrieval/create_conda_env.sh`，使其在新建隔离环境后默认执行：
+  - 依赖安装
+  - 版本打印
+  - `validate_stack.sh`
+- 更新 `tools/multimodal_retrieval/README.md`，把标准路径明确成“隔离环境安装 + 验证”
+- 更新中文汇报总文档：
+  - `/home/szn/zhangx/explore/docs/Nexus_多模态Embedding当前进展详解.md`
+  - `/home/szn/zhangx/explore/docs/Nexus_多模态Embedding当前进展详解_2026-03-25.md`
+
+### 九、当前明确的边界与未决事项
+
+当前可以真实确认的边界：
+
+- `Qwen2-VL-2B-Instruct` 已完成真实 smoke 闭环验证
+- `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 已完成代码层适配
+- 但除 `Qwen2-VL-2B-Instruct` 外，其他 backbone 目前尚未逐个做同等级别真实验收
+
+当前仍建议后续继续确认的事项：
+
+- 老师第二阶段最终偏好的 backbone family 与参数规模
+- 更大规模数据混合与正式训练资源预算
+- `HatefulMemes` 在 manifest 中同时出现在 `image` 与 `visdoc` 的模态归类问题

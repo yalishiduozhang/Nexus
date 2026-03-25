@@ -95,6 +95,7 @@ class BiMultimodalEmbedderModel(AbsEmbedderModel):
             model_type=model_args.model_type,
             torch_dtype_name=model_args.torch_dtype,
             attn_implementation=model_args.attn_implementation,
+            peft_is_trainable=True,
         )
         effective_model_type = (
             infer_multimodal_model_type(config)
@@ -103,7 +104,12 @@ class BiMultimodalEmbedderModel(AbsEmbedderModel):
         )
         wrapped_model_args.model_type = effective_model_type
 
-        if model_args.use_lora:
+        if model_args.use_lora and hasattr(model, "peft_config"):
+            logger.warning(
+                "The provided model path already resolves to a PEFT adapter. "
+                "Skipping an extra get_peft_model() wrap."
+            )
+        elif model_args.use_lora:
             lora_config = LoraConfig(
                 r=model_args.lora_r,
                 lora_alpha=model_args.lora_alpha,

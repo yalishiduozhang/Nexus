@@ -1,163 +1,208 @@
-# Multimodal Embedding Plan
+# 多模态 Embedding 项目总计划
 
-Last updated: 2026-03-25
+更新时间：2026-03-25
 
-## Objective
+## 一、项目总目标
 
-Build a multimodal embedding development stack inside Nexus that is usable for:
+基于 `Nexus` 整理出一个可真实用于多模态 embedding 研发的工程底座，覆盖：
 
-- supervised finetuning
-- offline embedding inference
-- local and benchmark-style evaluation
-- MMEB v2 data preparation and conversion
+- 多模态微调
+- 多模态推理
+- 多模态评测
+- MMEB v2 相关数据准备
+- 隔离环境与共享 GPU 安全执行
 
-The target project outcome is to train a strong open-backbone multimodal embedder that can compete with and ideally exceed the `Qwen3-VL-Embedding-8B` family on MMEB v2.
+在此基础上，为第二阶段正式训练做好准备，最终目标是在 `MMEB v2` 上尽量逼近并争取超过 `Qwen3-VL-Embedding-8B` 这一公开强基线。
 
-## Baseline
+## 二、当前阶段定位
 
-- Upstream base repo: `USTCLLM/Nexus`
-- Reference repos already inspected locally:
-  - `FlagEmbedding`
-  - `VLM2Vec`
-- First local milestone already committed:
-  - commit `8a5d364`
-  - message: `Add multimodal embedding pipeline and examples`
+当前工作的主目标已经明确收敛到老师布置的第一阶段，重点是把下面两件事做扎实：
 
-## Current Status
+- 把 `Nexus` 整理成可真实使用的多模态 embedding codebase
+- 为后续第二阶段留下真实可复现、低故障率的训练 / 推理 / 评测底座
 
-Done:
+本轮不把重心放在“直接冲榜”，而是先确保第一阶段做得真实、可验收、可交接。
 
-- Added a first multimodal retrieval pipeline to Nexus for training, inference, and evaluation.
-- Added example configs and scripts under `examples/multimodal_retrieval/`.
-- Confirmed the repo is already under git and local progress is traceable from the original Nexus history.
-- Added config-file entrypoints for multimodal training and evaluation so split JSON configs can drive the CLI.
-- Added a bundled local smoke dataset under `examples/multimodal_retrieval/data/`.
-- Added manifest-aware public-data tooling for selective HF download and train-data preparation:
-  - `vlm2vec_manifest_lib.py`
-  - `hf_dataset_manager.py`
-  - `prepare_public_data.py`
-  - `prepare_mmeb_v2_train_data.py`
-- Added manifest-driven MMEB v2 eval batch-preparation tooling:
-  - `prepare_mmeb_v2_eval_data.py`
-  - per-dataset `eval_config.json` emission
-  - validation coverage in `validate_stack.sh`
-- Regenerated the machine-readable MMEB v2 manifest so it now records separate metadata/media sources and train download patterns.
-- Verified one real public-data smoke path by downloading and converting the `HatefulMemes` MMEB-train subset into Nexus JSONL.
-- Verified the new eval-prep path in dry-run mode on representative image, video, and visdoc MMEB datasets.
-- Downloaded a fully local `Qwen/Qwen2-VL-2B-Instruct` backbone copy for offline smoke runs.
-- Verified a one-step offline LoRA smoke finetune on an idle single GPU with the local Qwen2-VL backbone and bundled multimodal example data.
+## 三、当前已经完成的核心工作
 
-In progress:
+### 3.1 多模态主链路
 
-- Turning selective public-data collection from one-source smoke coverage into a broader staged mixture.
-- Preparing stage-specific train and eval configs for subset runs once the local backbone smoke train is confirmed.
-- Preparing the first broader Stage A data mixture and subset evaluation bundle now that backbone-level smoke training is validated.
+已经在 `Nexus` 中补齐：
 
-Not started yet:
+- `training/embedder/multimodal_retrieval/`
+- `inference/embedder/multimodal_retrieval/`
+- `evaluation/multimodal_retrieval/`
+- `examples/multimodal_retrieval/`
 
-- broader environment-specific GPU training runs
-- storage-managed large-scale data download and curation
-- model training and leaderboard verification against MMEB v2
+也就是说，训练、推理、评测三条主链路已经在仓库内形成了明确入口，而不是停留在零散模块级别。
 
-## Milestones
+### 3.2 面向 MMEB v2 的能力补齐
 
-### M0: Nexus multimodal skeleton
+已经补齐并验证的能力包括：
 
-Status: completed
+- 图片 / 视频 / 视觉文档输入支持
+- 多模态字段标准化
+- `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 代码层兼容
+- `media_root / image_root / video_root` 显式路径管理
+- 多设备推理
+- LoRA 训练产物重新加载
 
-Scope:
+### 3.3 数据工具链
 
-- multimodal train/infer/eval modules
-- examples
-- first local commit
+已经补齐：
 
-### M1: MMEB v2 readiness pass
+- MMEB v2 inventory 文档
+- MMEB v2 machine-readable manifest
+- train 数据转换脚本
+- eval 数据转换脚本
+- public data 下载 / 规划工具
+- MMEB v2 train/eval 准备脚本
 
-Status: completed
+这意味着第一阶段不仅整理了模型代码，也把后续实际训练所需的数据工具链往前推进了。
 
-Scope:
+### 3.4 环境与执行安全
 
-- add native raw-video handling
-- add Qwen3-VL loading and chat-template compatibility
-- add evaluation-side `media_root` / `image_root` / `video_root`
-- restore actual multi-device inference behavior
-- add project tracking docs
+已经补齐：
 
-Exit criteria:
+- 隔离环境构建脚本
+- 环境配置文件
+- 共享 GPU 空闲检测工具
+- 一键验证脚本
 
-- local code passes static checks
-- examples and docs reflect current supported fields
-- conversion tooling exists for MMEB/VLM2Vec-oriented datasets
+并且当前验收要求始终保持：
 
-### M2: Data tooling and public data inventory
+- 不污染本地 `base` 环境
+- 不占用其他人正在跑任务的 GPU
 
-Status: completed
+### 3.5 第一阶段真实验收
 
-Scope:
+已经单独建立：
 
-- document MMEB v2 task inventory
-- map public training sources by modality
-- add conversion scripts from VLM2Vec/MMEB-oriented schemas into Nexus
+- `experiments/stage1_validation/`
 
-Exit criteria:
+其中集中沉淀了：
 
-- one reproducible inventory document
-- one training-data conversion path
-- one evaluation-data conversion path
+- 中文计划
+- 中文结果
+- 运行时验证报告
+- 配置化训练 / 评测 smoke 配置
+- 真实数据准备结果
+- backbone 与环境说明
 
-### M3: Training recipe
+## 四、当前已确认的真实结论
 
-Status: in progress
+截至目前，下面这些事实已经被真实验证，而不是停留在理论设计上：
 
-Scope:
+- `pytest tests/multimodal_retrieval -q` 通过，结果为 `31 passed`
+- `tools/multimodal_retrieval/validate_stack.sh` 通过
+- 本地离线 `Qwen2-VL-2B-Instruct` 已完成真实 smoke 验证
+- LoRA 训练输出目录已经可以直接用于后续推理和评测
+- 配置文件模式训练与评测可以跑通
+- 真实 public train 子集准备可以复现
+- MMEB v2 的 image / video / visdoc 代表评测集 dry-run 可以复现
 
-- select backbone candidates
-- isolate runtime environment
-- choose LoRA/full finetune strategy
-- prepare staged curriculum across image, video, visdoc data
-- generate stage-specific data configs from converted Nexus train JSONL
+## 五、当前仍在进行中的事项
 
-Exit criteria:
+虽然第一阶段主体已经成型，但下面这些工作仍处于“继续推进”状态：
 
-- runnable training recipe in Nexus
-- reproducible config set for at least one backbone family
+- 等待或推动更大范围的真实 public train mixture 准备
+- 等待老师或项目组进一步明确第二阶段最终 backbone 选择
+- 基于最终 backbone 和数据规模，制定更正式的训练配方
+- 为后续 MMEB v2 子集评测和正式 leaderboard 评测准备统一配置
 
-### M4: Evaluation and iteration
+## 六、当前尚未启动或尚未完成的事项
 
-Status: pending
+下面这些属于第二阶段及以后，不应在当前阶段夸大为“已经完成”：
 
-Scope:
+- 大规模正式训练
+- 完整 MMEB v2 leaderboard 提交
+- 与 `Qwen3-VL-Embedding-8B` 的正式分数对比
+- 迭代数据混合比例、instruction、pooling 和负样本策略后的系统 ablation
 
-- run local smoke evaluations
-- run MMEB v2 subsets
-- analyze per-modality failures
-- iterate data mixture, instructions, negatives, and pooling
+## 七、里程碑拆分
 
-Exit criteria:
+### M0：多模态骨架接入 Nexus
 
-- measured comparison against public baselines
-- clear gap-to-target report
+状态：已完成
 
-## Immediate Next Steps
+范围：
 
-1. Expand the real public-data smoke run from one MMEB image subset to a broader Stage A mixture.
-2. Use the new `prepare_mmeb_v2_eval_data.py` path to prepare small image/video/visdoc eval subsets for local iteration.
-3. Convert those subset runs into reusable stage configs and local benchmark commands.
-4. Start the first non-trivial LoRA training run after staging more than the bundled toy example.
-5. Move from smoke validation into per-modality error analysis and dataset-mixture iteration.
+- 多模态训练 / 推理 / 评测主链路
+- 示例配置与示例脚本
+- 首个本地里程碑提交
 
-## Risks And Dependencies
+### M1：面向 MMEB v2 的能力加固
 
-- Training and evaluation depend on a clean isolated environment with the right multimodal stack.
-- MMEB v2 data spans image, video, and visual-document tasks, so storage layout and media roots must stay configurable.
-- Video evaluation can be expensive and must not interfere with other users' jobs on shared GPUs.
-- Full public data collection is storage-heavy relative to the current machine, so selective download remains necessary until a larger storage target is prepared.
-- Python-level HF SDK networking remains unreliable inside the sandbox, so local cache reuse or unsandboxed shell download is still required for heavyweight artifacts.
-- Final leaderboard claims depend on real training runs and benchmark execution, which are not yet completed in this repository.
+状态：已完成
 
-## Working Rules
+范围：
 
-- Do not install dependencies into the local `base` environment.
-- Use git for every meaningful milestone.
-- Do not push unless explicitly requested.
-- Do not occupy GPUs that are already serving other users' jobs.
+- 视频输入支持
+- Qwen 系列兼容
+- 媒体根路径管理
+- 多设备推理修复
+- 文档与跟踪记录
+
+### M2：数据工具与公共数据准备
+
+状态：已完成
+
+范围：
+
+- inventory / manifest
+- train / eval 数据转换
+- public data 规划与局部真实 smoke
+
+### M3：第一阶段全面验收
+
+状态：已完成
+
+范围：
+
+- 回归测试复跑
+- 运行时推理 / 评测闭环验证
+- 配置文件模式训练与评测
+- 真实数据准备复跑
+- 环境与 backbone 说明沉淀
+
+### M4：第二阶段训练方案准备
+
+状态：进行中
+
+范围：
+
+- 确认最终 backbone family 与参数规模
+- 确认数据混合与阶段划分
+- 准备正式训练 recipe
+
+### M5：正式训练与 MMEB v2 冲榜
+
+状态：未开始
+
+范围：
+
+- 大规模训练
+- MMEB v2 子集与全量评测
+- 结果分析与迭代
+
+## 八、当前最优先的下一步
+
+1. 完成本轮第一阶段改动的 git 提交，形成可追踪里程碑。
+2. 与老师确认第二阶段最终更偏向哪条 backbone 路线，以及大致算力预算。
+3. 与负责数据收集的同学对齐 manifest 中个别数据集的模态归类问题。
+4. 在第一阶段代码底座不变的前提下，准备下一轮更正式的训练配方和数据混合配置。
+
+## 九、关键风险与依赖
+
+- 第二阶段最终 backbone 未唯一确定，会影响环境版本、显存需求和正式训练 recipe。
+- MMEB v2 涉及 image / video / visdoc，多模态数据管理复杂，路径和格式必须继续保持可配置。
+- 共享机器上的 GPU 使用必须持续遵守空闲检查原则。
+- 大规模 public data 收集会受到磁盘空间和网络条件限制。
+- 最终 leaderboard 结果依赖第二阶段正式训练与评测，不应提前做结论。
+
+## 十、工作约束
+
+- 不在本地 `base` 环境安装依赖。
+- 所有阶段性进展都通过 `git` 记录，不随意回退用户原有改动。
+- 使用 GPU 前先检查空闲情况，避免影响其他人的任务。
+- 验证、计划和结果尽量集中写入中文文档，方便老师验收与汇报。

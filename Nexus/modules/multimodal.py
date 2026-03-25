@@ -36,6 +36,27 @@ def infer_multimodal_model_type(config) -> str:
     return getattr(config, "model_type", DEFAULT_MULTIMODAL_MODEL_TYPE) or DEFAULT_MULTIMODAL_MODEL_TYPE
 
 
+def _maybe_load_peft_config(
+    model_name_or_path: str,
+    cache_dir: Optional[str] = None,
+    token: Optional[str] = None,
+):
+    adapter_config_path = os.path.join(model_name_or_path, "adapter_config.json")
+    if os.path.isdir(model_name_or_path) and not os.path.exists(adapter_config_path):
+        return None
+
+    try:
+        from peft import PeftConfig
+
+        return PeftConfig.from_pretrained(
+            model_name_or_path,
+            cache_dir=cache_dir,
+            token=token,
+        )
+    except Exception:
+        return None
+
+
 def load_multimodal_processor(
     model_name_or_path: str,
     processor_name_or_path: Optional[str] = None,
@@ -44,12 +65,27 @@ def load_multimodal_processor(
     token: Optional[str] = None,
 ):
     processor_path = processor_name_or_path or model_name_or_path
-    return AutoProcessor.from_pretrained(
-        processor_path,
-        cache_dir=cache_dir,
-        trust_remote_code=trust_remote_code,
-        token=token,
-    )
+    try:
+        return AutoProcessor.from_pretrained(
+            processor_path,
+            cache_dir=cache_dir,
+            trust_remote_code=trust_remote_code,
+            token=token,
+        )
+    except Exception:
+        peft_config = _maybe_load_peft_config(
+            processor_path,
+            cache_dir=cache_dir,
+            token=token,
+        )
+        if peft_config is None:
+            raise
+        return AutoProcessor.from_pretrained(
+            peft_config.base_model_name_or_path,
+            cache_dir=cache_dir,
+            trust_remote_code=trust_remote_code,
+            token=token,
+        )
 
 
 def _maybe_load_registered_conditional_generation_model(
@@ -78,9 +114,21 @@ def load_multimodal_backbone(
     model_type: str = DEFAULT_MULTIMODAL_MODEL_TYPE,
     torch_dtype_name: Optional[str] = None,
     attn_implementation: Optional[str] = None,
+    peft_is_trainable: bool = False,
 ):
-    config = AutoConfig.from_pretrained(
+    peft_config = _maybe_load_peft_config(
         model_name_or_path,
+        cache_dir=cache_dir,
+        token=token,
+    )
+    base_model_name_or_path = (
+        peft_config.base_model_name_or_path
+        if peft_config is not None
+        else model_name_or_path
+    )
+
+    config = AutoConfig.from_pretrained(
+        base_model_name_or_path,
         cache_dir=cache_dir,
         trust_remote_code=trust_remote_code,
         token=token,
@@ -102,16 +150,23 @@ def load_multimodal_backbone(
 
     model = _maybe_load_registered_conditional_generation_model(
         config=config,
-        model_name_or_path=model_name_or_path,
+        model_name_or_path=base_model_name_or_path,
         load_kwargs=load_kwargs,
     )
-    if model is not None:
-        return model, config
+    if model is None:
+        try:
+            model = AutoModel.from_pretrained(base_model_name_or_path, **load_kwargs)
+        except Exception:
+            model = AutoModelForCausalLM.from_pretrained(base_model_name_or_path, **load_kwargs)
 
-    try:
-        model = AutoModel.from_pretrained(model_name_or_path, **load_kwargs)
-    except Exception:
-        model = AutoModelForCausalLM.from_pretrained(model_name_or_path, **load_kwargs)
+    if peft_config is not None:
+        from peft import PeftModel
+
+        model = PeftModel.from_pretrained(
+            model,
+            model_name_or_path,
+            is_trainable=peft_is_trainable,
+        )
     return model, config
 
 

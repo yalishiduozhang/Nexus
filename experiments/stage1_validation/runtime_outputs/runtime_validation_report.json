@@ -1,0 +1,184 @@
+{
+  "base_model": {
+    "model_path": "/tmp/qwen2vl2b_local",
+    "single_device": "cuda:0",
+    "query_shape": [
+      4,
+      1536
+    ],
+    "passage_shape": [
+      4,
+      1536
+    ],
+    "single_score_matrix": [
+      [
+        0.9719005823135376,
+        0.9672086238861084,
+        0.9719005823135376,
+        0.9672086238861084
+      ],
+      [
+        0.9149323105812073,
+        0.9192275404930115,
+        0.9149323105812073,
+        0.9192275404930115
+      ],
+      [
+        0.9719005823135376,
+        0.9672086238861084,
+        0.9719005823135376,
+        0.9672086238861084
+      ],
+      [
+        0.9149323105812073,
+        0.9192275404930115,
+        0.9149323105812073,
+        0.9192275404930115
+      ]
+    ],
+    "multi_device": {
+      "devices": [
+        "cuda:0",
+        "cuda:1"
+      ],
+      "query_shape": [
+        4,
+        1536
+      ],
+      "passage_shape": [
+        4,
+        1536
+      ],
+      "score_matrix": [
+        [
+          0.9719005823135376,
+          0.9672086238861084,
+          0.9719005823135376,
+          0.9672086238861084
+        ],
+        [
+          0.9149323105812073,
+          0.9192275404930115,
+          0.9149323105812073,
+          0.9192275404930115
+        ],
+        [
+          0.9719005823135376,
+          0.9672086238861084,
+          0.9719005823135376,
+          0.9672086238861084
+        ],
+        [
+          0.9149323105812073,
+          0.9192275404930115,
+          0.9149323105812073,
+          0.9192275404930115
+        ]
+      ],
+      "query_allclose": true,
+      "passage_allclose": true,
+      "max_query_abs_diff": 0.0,
+      "max_passage_abs_diff": 0.0
+    }
+  },
+  "base_eval": {
+    "summary_path": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/runtime_outputs/base_eval/summary.md",
+    "summary_exists": true,
+    "summary_preview": "## ndcg_at_10\n\n| Model | Reranker | average | test |\n| :---- | :---- | :---: | :---: |\n| qwen2vl2b_local | NoReranker | **100.000** | **100.000** | \n\n## recall_at_10\n\n| Model | Reranker | average | test |\n| :---- | :---- | :---: | :---: |\n| qwen2vl2b_local | NoReranker | **100.000** | **100.000** | \n\n",
+    "eval_results": {
+      "qwen2vl2b_local/NoReranker/EVAL/eval_results.json": {
+        "test": {
+          "ndcg_at_1": 1.0,
+          "ndcg_at_3": 1.0,
+          "ndcg_at_5": 1.0,
+          "ndcg_at_10": 1.0,
+          "map_at_1": 1.0,
+          "map_at_3": 1.0,
+          "map_at_5": 1.0,
+          "map_at_10": 1.0,
+          "recall_at_1": 1.0,
+          "recall_at_3": 1.0,
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "precision_at_1": 1.0,
+          "precision_at_3": 0.33333,
+          "precision_at_5": 0.2,
+          "precision_at_10": 0.1,
+          "mrr_at_1": 1.0,
+          "mrr_at_3": 1.0,
+          "mrr_at_5": 1.0,
+          "mrr_at_10": 1.0
+        }
+      }
+    }
+  },
+  "adapter_model": {
+    "model_path": "/tmp/nexus_mm_smoke_train",
+    "single_device": "cuda:0",
+    "query_shape": [
+      4,
+      1536
+    ],
+    "passage_shape": [
+      4,
+      1536
+    ],
+    "single_score_matrix": [
+      [
+        0.9655909538269043,
+        0.9626072645187378,
+        0.9655909538269043,
+        0.9626072645187378
+      ],
+      [
+        0.9121102690696716,
+        0.9142390489578247,
+        0.9121102690696716,
+        0.9142390489578247
+      ],
+      [
+        0.9655909538269043,
+        0.9626072645187378,
+        0.9655909538269043,
+        0.9626072645187378
+      ],
+      [
+        0.9121102690696716,
+        0.9142390489578247,
+        0.9121102690696716,
+        0.9142390489578247
+      ]
+    ]
+  },
+  "adapter_eval": {
+    "summary_path": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/runtime_outputs/adapter_eval/summary.md",
+    "summary_exists": true,
+    "summary_preview": "## ndcg_at_10\n\n| Model | Reranker | average | test |\n| :---- | :---- | :---: | :---: |\n| nexus_mm_smoke_train | NoReranker | **100.000** | **100.000** | \n\n## recall_at_10\n\n| Model | Reranker | average | test |\n| :---- | :---- | :---: | :---: |\n| nexus_mm_smoke_train | NoReranker | **100.000** | **100.000** | \n\n",
+    "eval_results": {
+      "nexus_mm_smoke_train/NoReranker/EVAL/eval_results.json": {
+        "test": {
+          "ndcg_at_1": 1.0,
+          "ndcg_at_3": 1.0,
+          "ndcg_at_5": 1.0,
+          "ndcg_at_10": 1.0,
+          "map_at_1": 1.0,
+          "map_at_3": 1.0,
+          "map_at_5": 1.0,
+          "map_at_10": 1.0,
+          "recall_at_1": 1.0,
+          "recall_at_3": 1.0,
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "precision_at_1": 1.0,
+          "precision_at_3": 0.33333,
+          "precision_at_5": 0.2,
+          "precision_at_10": 0.1,
+          "mrr_at_1": 1.0,
+          "mrr_at_3": 1.0,
+          "mrr_at_5": 1.0,
+          "mrr_at_10": 1.0
+        }
+      }
+    }
+  }
+}
