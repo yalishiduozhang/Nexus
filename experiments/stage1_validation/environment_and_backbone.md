@@ -11,18 +11,20 @@
 
 ## 一、当前真实验证的 backbone 分层
 
-为了避免把“代码里写了兼容分支”和“真的验证过”混为一谈，这里把验证强度分成两层。
+为了避免把“代码里写了兼容分支”和“真的验证过”混为一谈，这里把验证强度分成三层。
 
 ### 第一层：完整闭环验证
 
 当前真正完成了“训练 / 推理 / 评测 / 真实 MMEB 子集评测”完整闭环验证的 backbone 是：
 
 - `Qwen/Qwen2-VL-2B-Instruct`
+- `Qwen/Qwen2.5-VL-3B-Instruct`
 - `Qwen/Qwen3-VL-2B-Instruct`
 
 本地离线路径：
 
 - `/tmp/qwen2vl2b_local`
+- `/tmp/qwen2_5vl3b_instruct_local`
 - `/tmp/qwen3vl2b_instruct_local`
 
 围绕这个 backbone，已经真实完成：
@@ -53,7 +55,48 @@
 
 - `experiments/stage1_validation/qwen3_vl_full_loop/`
 
-### 第二层：family-loader 真实验证
+对于 `Qwen2.5-VL-3B-Instruct`，本轮新增完成的真实闭环包括：
+
+- base model toy eval
+- one-step LoRA smoke 训练
+- LoRA 输出目录重载
+- base + adapter 本地 toy eval
+- 真实 MMEB 子集 `ViDoRe_arxivqa` base eval
+
+对应产物目录：
+
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/`
+
+### 第二层：family-level 工程闭环验证
+
+当前额外完成了一个很重要但需要如实说明边界的验证：
+
+- `optimum-internal-testing/tiny-random-llava-next-mistral`
+
+它对应的 `model_type` 是：
+
+- `llava_next`
+
+围绕这个公开 tiny checkpoint，我们已经真实完成：
+
+- base load check
+- base toy eval
+- one-step LoRA smoke 训练
+- LoRA 输出目录重载
+- base + adapter runtime validation
+- 真实 MMEB 子集 `ViDoRe_arxivqa` end-to-end eval
+
+对应产物目录：
+
+- `experiments/stage1_validation/llava_next_full_loop/`
+
+必须强调：
+
+- 这个 checkpoint 的作用是验证 `Llava-Next` family 的工程闭环
+- 它不是后续第二阶段追求性能的候选 backbone
+- 因此它能证明“代码链路可跑通”，但不能证明 “Llava-Next 性能一定强”
+
+### 第三层：family-loader 真实验证
 
 为了验证我们在 `Nexus/modules/multimodal.py` 里声明支持的 backbone family 不是“只写了分支”，本轮新增了：
 
@@ -115,7 +158,7 @@
 
 如果老师问“你们现在适配的是哪个模型”，最准确的说法是：
 
-> 当前完整闭环真实跑通的 backbone 包括 `Qwen2-VL-2B-Instruct` 和 `Qwen3-VL-2B-Instruct`。同时，代码层已面向 `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 四个主流多模态 VLM family 做了适配，并且我们已经对这四个 family 做了真实的本地 checkpoint 加载验证；其中 `Qwen3-VL` 的 family 验证和 smoke 闭环运行都在隔离的 `transformers 4.57.3` 环境里完成。
+> 当前完整闭环真实跑通的性能型 backbone 包括 `Qwen2-VL-2B-Instruct`、`Qwen2.5-VL-3B-Instruct` 和 `Qwen3-VL-2B-Instruct`。同时，代码层已面向 `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 四个主流多模态 VLM family 做了适配，并且我们已经对这四个 family 做了真实的本地 checkpoint 加载验证；其中 `Qwen2.5-VL`、`Qwen3-VL` 的 smoke 闭环，以及 `Llava-Next` 的 family-level 工程闭环，都是在隔离的 `transformers 4.57.3` 环境里完成。
 
 这样说的好处是：
 
@@ -196,11 +239,11 @@
 它足以支撑：
 
 - `Qwen2-VL` smoke 训练与评测
-- `Qwen2.5-VL / Llava-Next` loader family 验证
+- 基础多模态工具链与 loader matrix 验证
 
 但它不足以直接支撑：
 
-- `Qwen3-VL` family 验证
+- `Qwen2.5-VL / Qwen3-VL / Llava-Next` 在较新 `transformers` 上的完整 smoke 验证
 
 ### 2. 推荐的正式环境构建方式
 
@@ -242,4 +285,4 @@
 
 最稳妥的汇报口径如下：
 
-> 第一阶段已经完成。我们已经把 Nexus 整理成一个支持多模态 embedding 微调、推理、评测和 MMEB 数据准备的代码底座。当前完整闭环真实跑通的 backbone 已经包括 Qwen2-VL-2B-Instruct 和 Qwen3-VL-2B-Instruct；同时，Qwen2-VL、Qwen2.5-VL、Qwen3-VL、Llava-Next 四个 backbone family 都已经做了真实加载验证。因此，第一阶段不会因为最终 backbone 尚未唯一确定而被卡住，但第二阶段的正式训练方案仍建议尽快和老师确认。
+> 第一阶段已经完成。我们已经把 Nexus 整理成一个支持多模态 embedding 微调、推理、评测和 MMEB 数据准备的代码底座。当前完整闭环真实跑通的性能型 backbone 已经包括 Qwen2-VL-2B-Instruct、Qwen2.5-VL-3B-Instruct 和 Qwen3-VL-2B-Instruct；同时，Qwen2-VL、Qwen2.5-VL、Qwen3-VL、Llava-Next 四个 backbone family 都已经做了真实加载验证，其中 Llava-Next 还额外完成了基于公开 tiny checkpoint 的 family-level 工程闭环 smoke。因此，第一阶段不会因为最终 backbone 尚未唯一确定而被卡住，但第二阶段的正式训练方案仍建议尽快和老师确认。

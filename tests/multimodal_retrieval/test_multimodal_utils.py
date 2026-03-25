@@ -148,6 +148,42 @@ def test_processor_adapter_batches_visual_tensors_without_processor_pad():
     assert tuple(batch["image_grid_thw"].shape) == (2, 3)
 
 
+def test_processor_adapter_preserves_llava_next_image_sizes_without_processor_pad():
+    class FakeTokenizer:
+        def pad(self, features, padding=True, return_tensors="pt"):
+            max_len = max(len(feature["input_ids"]) for feature in features)
+            input_ids = []
+            attention_mask = []
+            for feature in features:
+                ids = list(feature["input_ids"])
+                mask = list(feature.get("attention_mask", [1] * len(ids)))
+                pad_len = max_len - len(ids)
+                input_ids.append(ids + [0] * pad_len)
+                attention_mask.append(mask + [0] * pad_len)
+            return {
+                "input_ids": torch.tensor(input_ids, dtype=torch.long),
+                "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
+            }
+
+    class FakeProcessor:
+        def __init__(self):
+            self.tokenizer = FakeTokenizer()
+
+    adapter = MultimodalProcessorAdapter(FakeProcessor(), model_type="llava_next", use_chat_template=False)
+    adapter._encode_single = lambda item, max_length=None: {
+        "input_ids": [[11, 12]],
+        "attention_mask": [[1, 1]],
+        "pixel_values": np.ones((1, 3, 3, 16, 16), dtype=np.float32),
+        "image_sizes": [(32, 32)],
+    }
+
+    batch = adapter.encode_batch([{"text": "a"}, {"text": "b"}], max_length=8)
+
+    assert tuple(batch["input_ids"].shape) == (2, 2)
+    assert tuple(batch["pixel_values"].shape) == (2, 3, 3, 16, 16)
+    assert tuple(batch["image_sizes"].shape) == (2, 2)
+
+
 def test_load_multimodal_backbone_supports_peft_adapter_dirs(tmp_path, monkeypatch):
     adapter_dir = tmp_path / "adapter"
     adapter_dir.mkdir()

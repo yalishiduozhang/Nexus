@@ -1,0 +1,23 @@
+{
+  "embedder_name_or_path": "/tmp/nexus_stage1_qwen2_5_config_train",
+  "processor_name_or_path": "/tmp/nexus_stage1_qwen2_5_config_train",
+  "model_type": "qwen2_5_vl",
+  "normalize_embeddings": true,
+  "pooling_method": "last_token",
+  "use_fp16": false,
+  "devices": [
+    "cuda:0"
+  ],
+  "query_instruction_for_retrieval": null,
+  "query_instruction_format_for_retrieval": "{}{}",
+  "passage_instruction_for_retrieval": null,
+  "passage_instruction_format_for_retrieval": "{}{}",
+  "trust_remote_code": true,
+  "cache_dir": null,
+  "embedder_batch_size": 2,
+  "embedder_query_max_length": 512,
+  "embedder_passage_max_length": 1024,
+  "use_chat_template": true,
+  "torch_dtype": "bfloat16",
+  "attn_implementation": null
+}

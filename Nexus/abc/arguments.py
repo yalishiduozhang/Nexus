@@ -3,7 +3,7 @@ import os
 import yaml
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Any, Union, get_args, get_origin
 from dataclasses import dataclass, asdict, fields
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,22 @@ MAYBE_LOCAL_OR_REMOTE_KEYS = {
 def init_argument(type_, x):
     if x is None:
         return None
+    origin = get_origin(type_)
+    args = get_args(type_)
+
+    if type_ in [Any, object]:
+        return x
+
+    if origin is Union:
+        for tmp_type_ in args:
+            if tmp_type_ is type(None):
+                continue
+            try:
+                return init_argument(tmp_type_, x)
+            except TypeError:
+                continue
+        raise TypeError(f"Failed to init argument {x} ({type(x)}) to {type_}.")
+
     if isinstance(x, dict):
         try:
             # is subclass of AbsArguments
@@ -39,29 +55,34 @@ def init_argument(type_, x):
         except:
             # dict
             return dict(x)
+    elif origin in [list, tuple]:
+        item_type = args[0] if len(args) > 0 else Any
+        converted = [init_argument(item_type, i) for i in x]
+        return converted if origin is list else tuple(converted)
     elif isinstance(x, list):
-        # List[type_]
-        return [init_argument(type_, i) for i in x]
+        return list(x)
     else:
         tmp_x = None
         try:
-            if isinstance(x, type_):
+            if isinstance(type_, type) and isinstance(x, type_):
                 tmp_x = x
             else:
                 tmp_x = type_(x)
                 logger.warning(f"Init argument: Convert {x} ({type(x)}) to {tmp_x} ({type(tmp_x)}).")
         except:
             try:
-                for tmp_type_ in type_.__args__:
+                for tmp_type_ in args:
                     if tmp_type_ is None:
+                        continue
+                    if tmp_type_ is type(None):
                         continue
                     if isinstance(x, tmp_type_):
                         tmp_x = x
                         break
                     else:
-                        tmp_x = type_(x)
+                        tmp_x = tmp_type_(x)
                         logger.warning(f"Init argument: Convert {x} ({type(x)}) to {tmp_x} ({type(tmp_x)}).")
-            except AttributeError:
+            except (AttributeError, TypeError):
                 raise TypeError(f"Failed to init argument {x} ({type(x)}) to {type_}.")
         if tmp_x is None:
             raise TypeError(f"Failed to init argument {x} ({type(x)}) to {type_}.")

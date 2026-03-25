@@ -77,7 +77,7 @@
 
 | 实验编号 | 实验主题 | 核心目标 | 结果 |
 | :-- | :-- | :-- | :-- |
-| E1 | 多模态回归测试 | 验证新增多模态能力与工具逻辑未回归 | 通过，`37 passed` |
+| E1 | 多模态回归测试 | 验证新增多模态能力与工具逻辑未回归 | 通过，`39 passed` |
 | E2 | 一键工具链验证 | 验证 validate_stack 全流程闭环 | 通过 |
 | E3 | 基础模型运行时验证 | 验证 base model 推理、多卡一致性、本地评测 | 通过 |
 | E4 | LoRA 输出运行时验证 | 验证训练输出目录可直接重载与评测 | 通过 |
@@ -93,6 +93,16 @@
 | E14 | `qwen3_vl` runtime validation | 验证 qwen3 base+adapter 推理与本地评测闭环 | 通过 |
 | E15 | `qwen3_vl` 真实 MMEB 子集评测 | 验证 qwen3 在真实 MMEB 子集上的评测链路 | 通过 |
 | E16 | example 与 config 鲁棒性修复验证 | 修复并验证示例脚本和 config-file 入口隐患 | 通过 |
+| E17 | config-file 列表字段解析修复验证 | 修复 `Optional[List[*]]` 类配置字段解析 bug | 通过 |
+| E18 | `qwen2_5_vl` base toy eval | 验证 qwen2.5 基础评测链路 | 通过 |
+| E19 | `qwen2_5_vl` 训练 smoke | 验证 qwen2.5 训练链路 | 通过 |
+| E20 | `qwen2_5_vl` runtime validation | 验证 qwen2.5 base+adapter 推理与本地评测闭环 | 通过 |
+| E21 | `qwen2_5_vl` 真实 MMEB 子集评测 | 验证 qwen2.5 在真实 MMEB 子集上的评测链路 | 通过 |
+| E22 | `llava_next` batch 兼容修复验证 | 修复 `image_sizes` 元数据在自定义 pad 路径中丢失的问题 | 通过 |
+| E23 | `llava_next` base toy eval | 验证 Llava-Next 家族基础评测链路 | 通过 |
+| E24 | `llava_next` 训练 smoke | 验证 Llava-Next 家族训练链路 | 通过 |
+| E25 | `llava_next` runtime validation | 验证 Llava-Next base+adapter 推理与本地评测闭环 | 通过 |
+| E26 | `llava_next` 真实 MMEB 子集评测 | 验证 Llava-Next 家族在真实 MMEB 子集上的评测链路 | 通过 |
 
 ---
 
@@ -139,7 +149,7 @@ PYTHONPATH=/home/szn/zhangx/explore/Nexus \
 
 结果：
 
-- `37 passed`
+- `39 passed`
 
 ### 5. 这个实验能证明什么
 
@@ -1148,7 +1158,7 @@ PYTHONPATH=/home/szn/zhangx/explore/Nexus \
 
 结果：
 
-- `37 passed`
+- `39 passed`
 
 再次执行：
 
@@ -1212,6 +1222,694 @@ scores: [[0.9630636 0.952819 ]]
 
 ---
 
+## E17. config-file 列表字段解析修复验证
+
+### 1. 为什么会出现这个问题
+
+在真正开始跑 `qwen2_5_vl` 的 base toy eval 时，我第一次遇到了一个此前没有被真实触发过的底层问题：
+
+- `AbsArguments.from_json()` 在解析 `Optional[List[str]]`、`List[int]` 这类字段时
+- 会走到 `typing` 的 `isinstance()` / `issubclass()` 检查
+- 然后抛出：
+  - `TypeError: Subscripted generics cannot be used with class and instance checks`
+
+这不是 `qwen2_5_vl` 独有问题，而是所有 config-file 模式里只要出现列表类型字段，都有潜在风险。
+
+这次之所以被真正暴露出来，是因为 `qwen2_5_vl` 的评测配置中明确写了：
+
+- `devices = ["cuda:0"]`
+- `splits = ["test"]`
+- `k_values = [1, 3, 5, 10]`
+
+### 2. 修复文件
+
+- `Nexus/abc/arguments.py`
+- `tests/multimodal_retrieval/test_cli_config.py`
+
+### 3. 修复内容
+
+核心修复是把 `init_argument()` 改成基于：
+
+- `typing.get_origin()`
+- `typing.get_args()`
+
+来显式处理：
+
+- `Union`
+- `Optional`
+- `List[*]`
+- `Tuple[*]`
+
+而不是再对 `typing.List[str]` 这一类类型直接做 `isinstance()`。
+
+同时补充了新的回归测试，显式验证：
+
+- eval config 里的 `splits`
+- `k_values`
+- model config 里的 `devices`
+
+都能通过 JSON 配置正确解析。
+
+### 4. 回归验证
+
+先执行有针对性的回归：
+
+```bash
+/home/szn/zht/miniconda3/envs/costa/bin/python \
+-m pytest tests/multimodal_retrieval/test_cli_config.py tests/multimodal_retrieval/test_multimodal_utils.py -q
+```
+
+结果：
+
+- `14 passed`
+
+再执行完整多模态回归：
+
+```bash
+/home/szn/zht/miniconda3/envs/costa/bin/python -m pytest tests/multimodal_retrieval -q
+```
+
+结果：
+
+- `39 passed`
+
+### 5. 这个实验能证明什么
+
+它说明：
+
+- config-file 模式现在对列表字段的处理更稳了
+- 这次不是靠“改成命令行参数绕过去”
+- 而是把底层 JSON 配置解析逻辑真正补齐了
+
+---
+
+## E18. `qwen2_5_vl` base toy eval
+
+### 1. 实验目的
+
+在已经验证 family-loader 可用的基础上，进一步确认：
+
+- 真正的 `Qwen2.5-VL-3B-Instruct` 权重能够被 Nexus 评测入口加载
+- 不只是能 `from_pretrained`，而且能在 toy retrieval 数据上真实跑完一次评测
+
+### 2. 实验环境
+
+- 模型：
+  - `/tmp/qwen2_5vl3b_instruct_local`
+- Python：
+  - `/tmp/nexus_stage1_tf457_env/bin/python`
+- `transformers`：
+  - `4.57.3`
+- 物理 GPU：
+  - `2`
+
+### 3. 预检查
+
+在真正启动评测前，先执行了基础加载检查：
+
+```bash
+/tmp/nexus_stage1_tf457_env/bin/python -c "
+from transformers import AutoConfig, AutoProcessor, Qwen2_5_VLForConditionalGeneration
+cfg=AutoConfig.from_pretrained('/tmp/qwen2_5vl3b_instruct_local')
+proc=AutoProcessor.from_pretrained('/tmp/qwen2_5vl3b_instruct_local', trust_remote_code=True)
+model=Qwen2_5_VLForConditionalGeneration.from_pretrained('/tmp/qwen2_5vl3b_instruct_local', trust_remote_code=True, torch_dtype='auto')
+print(type(proc).__name__)
+print(type(model).__name__)
+print(cfg.model_type)
+"
+```
+
+输出：
+
+- `Qwen2_5_VLProcessor`
+- `Qwen2_5_VLForConditionalGeneration`
+- `qwen2_5_vl`
+
+### 4. 执行方式
+
+执行命令：
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python \
+-m Nexus.evaluation.multimodal_retrieval \
+  --eval_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/qwen2_5_vl_full_loop/configs/eval_config_toy.qwen2_5.local.json \
+  --model_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/qwen2_5_vl_full_loop/configs/eval_model_base.qwen2_5.local.json
+```
+
+### 5. 输出文件
+
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/results/toy_eval/summary.md`
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/results/toy_eval/qwen2_5vl3b_instruct_local/NoReranker/EVAL/eval_results.json`
+
+### 6. 关键结果
+
+- `ndcg_at_10 = 1.0`
+- `recall_at_10 = 1.0`
+
+### 7. 这个实验能证明什么
+
+它说明：
+
+- `qwen2_5_vl` 在 Nexus 里的评测入口已经真实可用
+- family-loader 验证已经进一步升级成了真实评测验证
+
+---
+
+## E19. `qwen2_5_vl` 训练 smoke
+
+### 1. 实验目的
+
+验证：
+
+- `qwen2_5_vl` 在 Nexus 当前训练入口中能否真正完成一次 LoRA smoke 训练
+- 不只是能加载 base model，而是训练链路也能走通
+
+### 2. 输入配置
+
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/configs/train_model_config.qwen2_5.local.json`
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/configs/train_data_config.qwen2_5.local.json`
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/configs/train_training_config.qwen2_5.local.json`
+
+关键配置：
+
+- `model_name_or_path`：
+  - `/tmp/qwen2_5vl3b_instruct_local`
+- `model_type`：
+  - `qwen2_5_vl`
+- LoRA：
+  - `r=8`
+  - `alpha=16`
+- `max_steps = 1`
+- 输出目录：
+  - `/tmp/nexus_stage1_qwen2_5_config_train`
+
+### 3. 执行方式
+
+执行命令：
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python \
+-m Nexus.training.embedder.multimodal_retrieval \
+  --model_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/qwen2_5_vl_full_loop/configs/train_model_config.qwen2_5.local.json \
+  --data_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/qwen2_5_vl_full_loop/configs/train_data_config.qwen2_5.local.json \
+  --training_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/qwen2_5_vl_full_loop/configs/train_training_config.qwen2_5.local.json
+```
+
+### 4. 输出文件
+
+训练输出目录：
+
+- `/tmp/nexus_stage1_qwen2_5_config_train`
+
+其中关键文件：
+
+- `adapter_config.json`
+- `adapter_model.safetensors`
+- `preprocessor_config.json`
+- `tokenizer_config.json`
+- `video_preprocessor_config.json`
+
+汇总文件：
+
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/run_summary.json`
+
+### 5. 关键结果
+
+实际训练输出：
+
+- `train_loss = 0.57421875`
+- `train_runtime = 1.3064`
+- `train_steps_per_second = 0.765`
+
+### 6. 这个实验能证明什么
+
+它说明：
+
+- `qwen2_5_vl` 不只是“能加载能评测”
+- 在当前 Nexus 训练代码里也已经能走通完整的 LoRA smoke 训练
+
+---
+
+## E20. `qwen2_5_vl` runtime validation：base + adapter 推理与本地评测闭环
+
+### 1. 实验目的
+
+验证：
+
+- `qwen2_5_vl` 的基础模型推理可用
+- `qwen2_5_vl` 的训练输出目录可被重新加载
+- base model 和 adapter model 都能做本地评测
+
+### 2. 执行方式
+
+执行命令：
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python \
+tools/multimodal_retrieval/runtime_validation.py \
+  --base-model-path /tmp/qwen2_5vl3b_instruct_local \
+  --adapter-model-path /tmp/nexus_stage1_qwen2_5_config_train \
+  --model-type qwen2_5_vl \
+  --single-device cuda:0 \
+  --batch-size 2 \
+  --output-root /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/qwen2_5_vl_full_loop/runtime_validation
+```
+
+### 3. 输出文件
+
+总报告：
+
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/runtime_validation/runtime_validation_report.json`
+
+摘要：
+
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/runtime_validation/base_eval/summary.md`
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/runtime_validation/adapter_eval/summary.md`
+
+### 4. 关键结果
+
+来自 `runtime_validation_report.json`：
+
+- base model query embedding shape：
+  - `[4, 2048]`
+- base model passage embedding shape：
+  - `[4, 2048]`
+- adapter model query embedding shape：
+  - `[4, 2048]`
+- adapter model passage embedding shape：
+  - `[4, 2048]`
+
+base toy eval：
+
+- `ndcg_at_10 = 1.0`
+- `recall_at_10 = 1.0`
+
+adapter toy eval：
+
+- `ndcg_at_10 = 1.0`
+- `recall_at_10 = 1.0`
+
+### 5. 这个实验能证明什么
+
+它说明：
+
+- `qwen2_5_vl` 的完整 smoke 闭环现在已经成立：
+  - 训练
+  - 保存
+  - 重载
+  - 推理
+  - 本地评测
+
+---
+
+## E21. `qwen2_5_vl` 真实 MMEB 子集评测
+
+### 1. 实验目的
+
+验证：
+
+- `qwen2_5_vl` 不是只在 toy 数据上工作
+- 它也能直接进入真实 MMEB 子集的评测链路
+
+### 2. 输入配置
+
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/configs/eval_config_mmeb.qwen2_5.local.json`
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/configs/eval_model_base.qwen2_5.local.json`
+
+评测数据仍然使用已经准备好的：
+
+- `ViDoRe_arxivqa`
+
+### 3. 执行方式
+
+执行命令：
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python \
+-m Nexus.evaluation.multimodal_retrieval \
+  --eval_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/qwen2_5_vl_full_loop/configs/eval_config_mmeb.qwen2_5.local.json \
+  --model_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/qwen2_5_vl_full_loop/configs/eval_model_base.qwen2_5.local.json
+```
+
+### 4. 输出文件
+
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/results/mmeb_eval/summary.md`
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/results/mmeb_eval/qwen2_5vl3b_instruct_local/NoReranker/EVAL/eval_results.json`
+- `experiments/stage1_validation/qwen2_5_vl_full_loop/results/mmeb_eval/qwen2_5vl3b_instruct_local/NoReranker/ViDoRe_arxivqa-test.json`
+
+### 5. 关键结果
+
+- `ndcg_at_10 = 81.546`
+- `recall_at_10 = 100.000`
+
+### 6. 这个实验能证明什么
+
+它说明：
+
+- `qwen2_5_vl` 现在也已经不只是 family-loader 级别验证
+- 而是完成了和 `Qwen2-VL / Qwen3-VL` 同等级的 smoke 闭环
+
+---
+
+## E22. `llava_next` batch 兼容修复验证
+
+### 1. 实验目的
+
+验证：
+
+- `LlavaNextProcessor` 在没有 `.pad()` 方法时，走我们自定义 tokenizer-pad fallback 路径仍然能保留 `image_sizes`
+- `llava_next` 不会因为视觉元数据被丢掉而在 forward 阶段报错
+
+### 2. 真实暴露的问题
+
+第一次真实执行 `llava_next` toy eval 时，报错为：
+
+```text
+TypeError: 'NoneType' object is not iterable
+```
+
+根因是：
+
+- `Nexus/modules/multimodal.py`
+- `MultimodalProcessorAdapter._batch_with_tokenizer_pad`
+
+此前只保留了：
+
+- `pixel_values`
+- `image_grid_thw`
+- `pixel_values_videos`
+- `video_grid_thw`
+
+但没有保留 `llava_next` forward 所必需的：
+
+- `image_sizes`
+
+### 3. 修复内容
+
+修复文件：
+
+- `Nexus/modules/multimodal.py`
+- `tests/multimodal_retrieval/test_multimodal_utils.py`
+
+修复方式：
+
+- 在自定义 batch 合并路径中新增 `image_sizes`
+- 为 numpy/list 形式的视觉字段统一做安全 tensor 化
+- 新增针对 `llava_next` 的回归测试，确保 `image_sizes` 会进入最终 batch
+
+### 4. 执行方式
+
+执行命令：
+
+```bash
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python -m pytest tests/multimodal_retrieval/test_multimodal_utils.py -q
+```
+
+以及真实 processor batch 复核：
+
+```bash
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python - <<'PY'
+... 真实 LlavaNextProcessor 构造 batch，检查 image_sizes 是否存在 ...
+PY
+```
+
+### 5. 关键结果
+
+- `test_multimodal_utils.py`：
+  - `12 passed`
+- 真实 `LlavaNextProcessor` batch 复核结果：
+  - `input_ids` shape：`(2, 1197)`
+  - `attention_mask` shape：`(2, 1197)`
+  - `pixel_values` shape：`(2, 3, 3, 336, 336)`
+  - `image_sizes` shape：`(2, 2)`
+
+### 6. 这个实验能证明什么
+
+它说明：
+
+- 这次 `Llava-Next` 不是“命令碰巧跑通”
+- 而是借由真实报错，把底层 batch 兼容层补完整了
+
+---
+
+## E23. `llava_next` base toy eval
+
+### 1. 实验目的
+
+验证：
+
+- `llava_next` family 的基础评测链路可以真实跑通
+- 公开 tiny checkpoint 能够被 Nexus 作为多模态 embedder 真实加载并产出结果
+
+### 2. 输入模型与配置
+
+使用 checkpoint：
+
+- `optimum-internal-testing/tiny-random-llava-next-mistral`
+
+本地路径：
+
+- `/tmp/tiny_random_llava_next_mistral_local`
+
+配置文件：
+
+- `experiments/stage1_validation/llava_next_full_loop/configs/eval_model_base.llava_next.local.json`
+- `experiments/stage1_validation/llava_next_full_loop/configs/eval_config_toy.llava_next.local.json`
+
+### 3. 执行方式
+
+先做 base load check：
+
+```bash
+/tmp/nexus_stage1_tf457_env/bin/python - <<'PY'
+... AutoProcessor / AutoConfig / LlavaNextForConditionalGeneration.from_pretrained ...
+PY
+```
+
+再执行 toy eval：
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python \
+-m Nexus.evaluation.multimodal_retrieval \
+  --eval_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/llava_next_full_loop/configs/eval_config_toy.llava_next.local.json \
+  --model_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/llava_next_full_loop/configs/eval_model_base.llava_next.local.json
+```
+
+### 4. 输出文件
+
+- `experiments/stage1_validation/llava_next_full_loop/results/toy_eval/summary.md`
+- `experiments/stage1_validation/llava_next_full_loop/results/toy_eval/tiny_random_llava_next_mistral_local/NoReranker/EVAL/eval_results.json`
+- `experiments/stage1_validation/llava_next_full_loop/run_summary.json`
+
+### 5. 关键结果
+
+base load check：
+
+- `processor_class = LlavaNextProcessor`
+- `model_class = LlavaNextForConditionalGeneration`
+- `config_model_type = llava_next`
+
+toy eval：
+
+- `ndcg_at_10 = 63.093`
+- `recall_at_10 = 100.000`
+
+### 6. 这个实验能证明什么
+
+它说明：
+
+- `llava_next` family 已经不只是 loader 级别兼容
+- 至少基础评测入口、真实图片输入和 embedding 检索链路都已经打通
+
+同时必须说明：
+
+- 这个 checkpoint 是 tiny random testing model
+- 这里的分数没有性能意义，只用于证明链路可跑
+
+---
+
+## E24. `llava_next` 训练 smoke
+
+### 1. 实验目的
+
+验证：
+
+- `llava_next` family 在 Nexus 中的 one-step LoRA smoke 训练可以真实完成
+- 输出目录能作为后续 adapter 评测输入
+
+### 2. 输入配置
+
+- `experiments/stage1_validation/llava_next_full_loop/configs/train_model_config.llava_next.local.json`
+- `experiments/stage1_validation/llava_next_full_loop/configs/train_data_config.llava_next.local.json`
+- `experiments/stage1_validation/llava_next_full_loop/configs/train_training_config.llava_next.local.json`
+
+### 3. 执行方式
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python \
+-m Nexus.training.embedder.multimodal_retrieval \
+  --model_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/llava_next_full_loop/configs/train_model_config.llava_next.local.json \
+  --data_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/llava_next_full_loop/configs/train_data_config.llava_next.local.json \
+  --training_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/llava_next_full_loop/configs/train_training_config.llava_next.local.json
+```
+
+### 4. 输出文件
+
+- `/tmp/nexus_stage1_llava_next_config_train/adapter_config.json`
+- `/tmp/nexus_stage1_llava_next_config_train/adapter_model.safetensors`
+- `experiments/stage1_validation/llava_next_full_loop/run_summary.json`
+
+### 5. 关键结果
+
+- `train_loss = 0.7262375354766846`
+- `train_runtime = 0.6278`
+- `train_samples_per_second = 1.593`
+- `train_steps_per_second = 1.593`
+
+### 6. 这个实验能证明什么
+
+它说明：
+
+- `llava_next` family 训练入口已经能真实写出可重载的 LoRA 产物
+- 第一阶段对训练侧的整理不是只覆盖 Qwen family
+
+---
+
+## E25. `llava_next` runtime validation
+
+### 1. 实验目的
+
+验证：
+
+- `llava_next` 的 base model 和 adapter model 都能被重新加载
+- 推理、本地评测和结果文件写出链路都真实可用
+
+### 2. 输入资产
+
+- base model：
+  - `/tmp/tiny_random_llava_next_mistral_local`
+- adapter model：
+  - `/tmp/nexus_stage1_llava_next_config_train`
+
+### 3. 执行方式
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python \
+tools/multimodal_retrieval/runtime_validation.py \
+  --base-model-path /tmp/tiny_random_llava_next_mistral_local \
+  --adapter-model-path /tmp/nexus_stage1_llava_next_config_train \
+  --model-type llava_next \
+  --single-device cuda:0 \
+  --batch-size 1 \
+  --output-root /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/llava_next_full_loop/runtime_validation
+```
+
+### 4. 输出文件
+
+- `experiments/stage1_validation/llava_next_full_loop/runtime_validation/runtime_validation_report.json`
+- `experiments/stage1_validation/llava_next_full_loop/runtime_validation/base_eval/summary.md`
+- `experiments/stage1_validation/llava_next_full_loop/runtime_validation/adapter_eval/summary.md`
+
+### 5. 关键结果
+
+base model：
+
+- query embedding shape：`[4, 8]`
+- passage embedding shape：`[4, 8]`
+
+adapter model：
+
+- query embedding shape：`[4, 8]`
+- passage embedding shape：`[4, 8]`
+
+base toy eval：
+
+- `ndcg_at_10 = 1.0`
+- `recall_at_10 = 1.0`
+
+adapter toy eval：
+
+- `ndcg_at_10 = 1.0`
+- `recall_at_10 = 1.0`
+
+### 6. 这个实验能证明什么
+
+它说明：
+
+- `llava_next` family 的“训练输出 -> 重新加载 -> 继续推理与评测”闭环已经真实成立
+- 这正是第一阶段 codebase 整理最关键的工程闭环之一
+
+---
+
+## E26. `llava_next` 真实 MMEB 子集评测
+
+### 1. 实验目的
+
+验证：
+
+- `llava_next` family 不是只在 toy 数据上跑通
+- 它也能直接进入真实 MMEB 子集评测链路
+
+### 2. 输入配置
+
+- `experiments/stage1_validation/llava_next_full_loop/configs/eval_config_mmeb.llava_next.local.json`
+- `experiments/stage1_validation/llava_next_full_loop/configs/eval_model_base.llava_next.local.json`
+
+评测数据仍然使用：
+
+- `ViDoRe_arxivqa`
+
+### 3. 执行方式
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTHONPATH=/home/szn/zhangx/explore/Nexus \
+/tmp/nexus_stage1_tf457_env/bin/python \
+-m Nexus.evaluation.multimodal_retrieval \
+  --eval_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/llava_next_full_loop/configs/eval_config_mmeb.llava_next.local.json \
+  --model_config /home/szn/zhangx/explore/Nexus/experiments/stage1_validation/llava_next_full_loop/configs/eval_model_base.llava_next.local.json
+```
+
+### 4. 输出文件
+
+- `experiments/stage1_validation/llava_next_full_loop/results/mmeb_eval/summary.md`
+- `experiments/stage1_validation/llava_next_full_loop/results/mmeb_eval/tiny_random_llava_next_mistral_local/NoReranker/EVAL/eval_results.json`
+
+### 5. 关键结果
+
+- `ndcg_at_10 = 81.546`
+- `recall_at_10 = 100.000`
+
+### 6. 这个实验能证明什么
+
+它说明：
+
+- `llava_next` family 现在也已经进入了真实 MMEB 子集评测链路
+- 第一阶段不再存在“只有 Qwen 能跑，Llava-Next 只能 import”的短板
+
+但同样要保留边界：
+
+- 这个 checkpoint 是 tiny random testing model
+- 这条实验的意义是“评测链路真实跑通”，不是“Llava-Next 性能已经证明优秀”
+
+---
+
 ## 五、这些实验合起来能说明什么
 
 如果把所有实验放在一起看，可以得到一个比较硬的结论：
@@ -1260,6 +1958,30 @@ scores: [[0.9630636 0.952819 ]]
 - E15 跑通了 `qwen3_vl` 在真实 MMEB 子集上的评测
 - E16 又把 qwen3 会真正用到的 example/config 层隐患补掉并验证
 
+### 7. `qwen2_5_vl` 现在也已经完成 smoke 级闭环
+
+证据：
+
+- E18 跑通了 `qwen2_5_vl` base toy eval
+- E19 跑通了 `qwen2_5_vl` LoRA smoke 训练
+- E20 跑通了 `qwen2_5_vl` adapter 重载、推理和本地评测
+- E21 跑通了 `qwen2_5_vl` 在真实 MMEB 子集上的评测
+
+### 8. `Llava-Next` 现在也已经完成 family-level 工程闭环
+
+证据：
+
+- E22 先在真实报错基础上修复了 `image_sizes` batch 兼容问题
+- E23 跑通了 `llava_next` base toy eval 和真实 base load check
+- E24 跑通了 `llava_next` LoRA smoke 训练
+- E25 跑通了 `llava_next` adapter 重载、推理和本地评测
+- E26 跑通了 `llava_next` 在真实 MMEB 子集上的评测
+
+但边界也很明确：
+
+- 这组实验使用的是公开 tiny random checkpoint
+- 所以它证明的是“工程链路完整可跑”，不是“Llava-Next 性能已经被验证”
+
 ---
 
 ## 六、当前仍然保留的诚实边界
@@ -1274,16 +1996,17 @@ scores: [[0.9630636 0.952819 ]]
 
 - 第一阶段 codebase 整理已经完成
 - 并且已经经过了多层真实实验验证
-- 当前已经完成 smoke 级完整闭环验证的 backbone 包括：
+- 当前已经完成 smoke 级完整闭环验证的性能型 backbone 包括：
   - `Qwen2-VL-2B-Instruct`
+  - `Qwen2.5-VL-3B-Instruct`
   - `Qwen3-VL-2B-Instruct`
-- `Qwen2.5-VL / Llava-Next` 已完成真实 family-loader 验证
+- `Llava-Next` 已完成基于公开 tiny checkpoint 的 family-level 工程闭环 smoke 验证
 
 ---
 
 ## 七、接下来的补充实验计划
 
-本轮 `qwen3_vl` 全闭环实验已经完成。后续如果继续推进，更值得做的方向是：
+本轮 `qwen2_5_vl` 与 `llava_next` 补充实验也已经完成。后续如果继续推进，更值得做的方向是：
 
-- 把 `Qwen2.5-VL` 也补成同等级 smoke 闭环
+- 基于正式候选大模型 checkpoint 做 `Llava-Next` 性能型 smoke / benchmark 闭环
 - 在正式训练环境中用更大规模 qwen3 backbone 做第二阶段 recipe 验证

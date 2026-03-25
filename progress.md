@@ -235,9 +235,9 @@
 
 当前可以真实确认的边界：
 
-- `Qwen2-VL-2B-Instruct` 与 `Qwen3-VL-2B-Instruct` 都已完成真实 smoke 闭环验证
+- `Qwen2-VL-2B-Instruct`、`Qwen2.5-VL-3B-Instruct` 与 `Qwen3-VL-2B-Instruct` 都已完成真实 smoke 闭环验证
 - `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 已完成代码层适配
-- `Qwen2.5-VL` 与 `Llava-Next` 目前仍未逐个完成同等级别真实 smoke 验收
+- `Llava-Next` 已完成 family-level 工程 smoke 验收，但使用的是公开 tiny 测试 checkpoint，因此不代表性能结论
 
 当前仍建议后续继续确认的事项：
 
@@ -260,7 +260,7 @@
 
 新增真实验证：
 
-- `pytest tests/multimodal_retrieval -q` 重新通过，结果提升为 `37 passed`
+- `pytest tests/multimodal_retrieval -q` 重新通过，结果提升为 `39 passed`
 - `tools/multimodal_retrieval/validate_stack.sh` 重新通过
 - 使用空闲 `GPU 2` 完成 `ViDoRe_arxivqa` 真实 MMEB 子集 end-to-end eval
 - 在 `costa` 环境下完成：
@@ -326,6 +326,52 @@
 更新后的最准确结论：
 
 - 第一阶段代码底座已经完成
-- `Qwen2-VL-2B-Instruct` 与 `Qwen3-VL-2B-Instruct` 都已完成 smoke 级完整闭环验证
-- `Qwen2.5-VL / Llava-Next` 已完成真实 family-loader 验证
+- `Qwen2-VL-2B-Instruct`、`Qwen2.5-VL-3B-Instruct` 与 `Qwen3-VL-2B-Instruct` 都已完成 smoke 级完整闭环验证
+- `Llava-Next` 已完成基于公开 tiny checkpoint 的 family-level 工程闭环 smoke 验证
 - 对 `qwen3_vl` 旧版 `transformers` 环境会给出明确安装提示，避免误导性回退错误
+
+### 十二、`llava_next` family-level 全流程补齐与最终回归
+
+已完成：
+
+- 下载并本地化公开 tiny checkpoint：
+  - `/tmp/tiny_random_llava_next_mistral_local`
+- 真实完成 `llava_next` 全流程 smoke：
+  - base load check
+  - base toy eval
+  - one-step LoRA smoke 训练
+  - adapter 重载与 runtime validation
+  - `ViDoRe_arxivqa` 真实 MMEB 子集评测
+- 在真实运行中暴露并修复：
+  - `MultimodalProcessorAdapter._batch_with_tokenizer_pad` 丢失 `image_sizes`
+- 为该问题补入回归测试
+
+新增产物：
+
+- `experiments/stage1_validation/llava_next_full_loop/`
+- `experiments/stage1_validation/llava_next_full_loop/run_summary.json`
+- `experiments/stage1_validation/llava_next_full_loop/runtime_validation/runtime_validation_report.json`
+
+关键结果：
+
+- `llava_next` toy eval：
+  - `ndcg_at_10 = 63.093`
+  - `recall_at_10 = 100.000`
+- `llava_next` 训练 smoke：
+  - `train_loss = 0.7262375354766846`
+- `llava_next` runtime validation：
+  - base query / passage shape：`[4, 8] / [4, 8]`
+  - adapter query / passage shape：`[4, 8] / [4, 8]`
+- `llava_next` 真实 MMEB 子集 `ViDoRe_arxivqa`：
+  - `ndcg_at_10 = 81.546`
+  - `recall_at_10 = 100.000`
+- 最终回归：
+  - `pytest tests/multimodal_retrieval -q`：`39 passed`
+  - `validate_stack.sh`：通过
+
+更新后的最准确结论：
+
+- 第一阶段代码底座已经完成，并且四个目标 family 都已有真实验证结果
+- `Qwen2-VL / Qwen2.5-VL / Qwen3-VL` 已完成性能型 smoke 闭环
+- `Llava-Next` 已完成 family-level 工程闭环 smoke
+- 第二阶段若要追求分数，仍需基于正式候选大模型 backbone 做性能型训练与 benchmark

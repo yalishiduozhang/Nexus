@@ -4,6 +4,7 @@ import os
 from copy import deepcopy
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
+import numpy as np
 import torch
 from transformers import AutoConfig, AutoModel, AutoModelForCausalLM, AutoProcessor
 
@@ -836,11 +837,17 @@ class MultimodalProcessorAdapter:
             tokenizer_features.append(feature)
 
         batch = tokenizer.pad(tokenizer_features, padding=True, return_tensors="pt")
-        for key in ["pixel_values", "image_grid_thw", "pixel_values_videos", "video_grid_thw"]:
+        for key in [
+            "pixel_values",
+            "image_grid_thw",
+            "pixel_values_videos",
+            "video_grid_thw",
+            "image_sizes",
+        ]:
             values = [item[key] for item in encoded_items if item.get(key) is not None]
             if len(values) == 0:
                 continue
-            batch[key] = torch.cat([torch.as_tensor(value) for value in values], dim=0)
+            batch[key] = torch.cat([torch.as_tensor(np.asarray(value)) for value in values], dim=0)
         return batch
 
     def encode_batch(

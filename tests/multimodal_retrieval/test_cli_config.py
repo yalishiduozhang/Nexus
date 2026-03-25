@@ -73,12 +73,15 @@ def test_eval_cli_accepts_json_configs_without_onnx(tmp_path):
         {
             "eval_name": "toy_eval",
             "dataset_dir": "dataset",
+            "splits": ["test"],
+            "k_values": [1, 10],
         },
     )
     write_json(
         model_config,
         {
             "embedder_name_or_path": "./model_dir",
+            "devices": ["cuda:0"],
         },
     )
 
@@ -93,7 +96,10 @@ def test_eval_cli_accepts_json_configs_without_onnx(tmp_path):
 
     assert eval_args.eval_name == "toy_eval"
     assert eval_args.dataset_dir == str(dataset_dir.resolve())
+    assert eval_args.splits == ["test"]
+    assert eval_args.k_values == [1, 10]
     assert model_args.embedder_name_or_path == str(model_dir.resolve())
+    assert model_args.devices == ["cuda:0"]
 
 
 def test_training_import_patches_accelerate_unwrap_model_signature():

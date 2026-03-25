@@ -1,0 +1,17 @@
+{
+    "eval_name": "ViDoRe_arxivqa_llava_next_base",
+    "model_name": "tiny_random_llava_next_mistral_local",
+    "reranker_name": "NoReranker",
+    "split": "test",
+    "dataset_name": "ViDoRe_arxivqa",
+    "search_results": {
+        "0": {
+            "1": 0.974238395690918,
+            "0": 0.9478319883346558
+        },
+        "1": {
+            "1": 0.9847591519355774,
+            "0": 0.9659930467605591
+        }
+    }
+}

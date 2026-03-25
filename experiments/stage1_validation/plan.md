@@ -54,7 +54,7 @@
 
 当前结果：
 
-- `37 passed`
+- `39 passed`
 - `validate_stack.sh` 全链路通过
 
 ### B. GPU 安全工具
@@ -139,6 +139,19 @@
 - 隔离 `transformers 4.57.3` 环境补充验证：
   - `qwen3_vl`
 
+### I. `Llava-Next` family-level 全流程 smoke 验证
+
+状态：已完成
+
+已完成：
+
+- 使用公开 tiny checkpoint `optimum-internal-testing/tiny-random-llava-next-mistral`
+- base toy eval
+- one-step LoRA smoke 训练
+- adapter 重载与 runtime validation
+- `ViDoRe_arxivqa` 真实 MMEB 子集评测
+- 修复真实运行暴露出的 `image_sizes` batch 保留问题
+
 ## 五、当前结论
 
 第一阶段验收已经达到退出标准。
@@ -149,6 +162,7 @@
 - MMEB 相关数据准备工具可用
 - 至少一个真实 backbone 完成完整闭环
 - 所有声明支持的 backbone family 完成真实加载验证
+- `Llava-Next` family 也已完成真实工程闭环 smoke
 - 环境和路径问题有明确解决方案
 
 ## 六、建议的下一步

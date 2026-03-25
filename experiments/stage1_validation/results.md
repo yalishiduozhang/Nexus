@@ -17,13 +17,16 @@
   - 在当前 `costa` 环境下，`qwen2_vl / qwen2_5_vl / llava_next` 均完成 tiny-checkpoint `from_pretrained` 加载验证
   - 在额外隔离的 `transformers 4.57.3` 环境下，`qwen3_vl` 也完成了同样的真实加载验证
 - `qwen3_vl` 已进一步完成 smoke 级训练、重载、推理、本地评测与真实 MMEB 子集评测
+- `qwen2_5_vl` 也已完成 smoke 级训练、重载、推理、本地评测与真实 MMEB 子集评测
+- `llava_next` 已使用公开 tiny checkpoint 完成 family-level 训练、重载、推理、本地评测与真实 MMEB 子集评测 smoke 验证
 
 需要严格说明的边界：
 
 - 目前完成 smoke 级“训练 + 推理 + 本地评测 + 真实 MMEB 子集评测”完整闭环的 backbone 已经包括：
   - `Qwen2-VL-2B-Instruct`
+  - `Qwen2.5-VL-3B-Instruct`
   - `Qwen3-VL-2B-Instruct`
-- `Qwen2.5-VL / Llava-Next` 目前仍处于真实 family-loader 验证阶段
+- `Llava-Next` 已完成 family-level 工程闭环 smoke，但使用的是公开 tiny 测试 checkpoint，只能证明代码链路可跑，不能代表性能结论
 - 因此，第一阶段可以说“代码底座已经完成并经过真实验收”，但不能夸大成“第二阶段冲榜训练已经完成”
 
 ## 二、本轮重点修复的问题
@@ -154,7 +157,7 @@
 
 结果：
 
-- `37 passed`
+- `39 passed`
 
 ### B. 一键验证脚本
 
@@ -274,6 +277,42 @@
 - 代码层面对四个 family 的加载逻辑已经真实打通
 - 如果第二阶段最终选 `Qwen3-VL`，正式环境必须满足 `transformers>=4.57.3`
 
+### F. `Llava-Next` family-level 全流程 smoke 验证
+
+使用 checkpoint：
+
+- `optimum-internal-testing/tiny-random-llava-next-mistral`
+
+说明：
+
+- 这是公开 tiny 测试 checkpoint
+- 作用是验证 `llava_next` family 在我们代码里的训练 / 重载 / 推理 / 评测链路完整可跑
+- 它不是后续第二阶段追求性能的候选 backbone
+
+真实完成：
+
+- base load check：
+  - `LlavaNextProcessor`
+  - `LlavaNextForConditionalGeneration`
+  - `model_type = llava_next`
+- base toy eval：
+  - `ndcg_at_10 = 63.093`
+  - `recall_at_10 = 100.000`
+- one-step LoRA smoke 训练：
+  - `train_loss = 0.7262375`
+- runtime validation：
+  - base query / passage shape：`[4, 8] / [4, 8]`
+  - adapter query / passage shape：`[4, 8] / [4, 8]`
+  - base + adapter toy eval 都通过
+- 真实 MMEB 子集 `ViDoRe_arxivqa`：
+  - `ndcg_at_10 = 81.546`
+  - `recall_at_10 = 100.000`
+
+本轮因此额外修复的真实 bug：
+
+- `processor` 缺少 `.pad()` 时，自定义 batch 合并路径没有保留 `llava_next` 必需的 `image_sizes`
+- 现已在 `Nexus/modules/multimodal.py` 修复，并补入回归测试
+
 ## 四、阶段一是否可以认为已经完成
 
 可以。
@@ -291,7 +330,7 @@
 
 - 我们还没有完成第二阶段的大规模正式训练
 - 还没有提交完整 MMEB v2 leaderboard 成绩
-- `Qwen2.5-VL / Llava-Next` 目前完成的是 family-loader 真实验证，而不是完整 benchmark 闭环
+- `Llava-Next` 当前完成的是 family-level 工程闭环 smoke，而不是面向性能结论的大模型 benchmark 闭环
 - 第二阶段最终 backbone 仍建议和老师进一步确认
 
 ## 六、关键产物位置
@@ -308,5 +347,9 @@
   - `experiments/stage1_validation/backbone_matrix/`
 - 运行时训练 / 推理验证：
   - `experiments/stage1_validation/runtime_outputs/`
+- `qwen2_5_vl` 全闭环实验：
+  - `experiments/stage1_validation/qwen2_5_vl_full_loop/`
 - `qwen3_vl` 全闭环实验：
   - `experiments/stage1_validation/qwen3_vl_full_loop/`
+- `llava_next` family-level 全闭环实验：
+  - `experiments/stage1_validation/llava_next_full_loop/`
