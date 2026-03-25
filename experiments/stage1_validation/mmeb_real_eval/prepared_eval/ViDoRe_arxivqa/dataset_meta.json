@@ -1,0 +1,13 @@
+{
+  "dataset_name": "ViDoRe_arxivqa",
+  "source_input": "vidore/arxivqa_test_subsampled_beir",
+  "subset": null,
+  "split": "test",
+  "media_root": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/raw/visdoc-tasks/ViDoRe_arxivqa",
+  "image_root": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/raw/visdoc-tasks/ViDoRe_arxivqa",
+  "video_root": null,
+  "num_queries": 2,
+  "num_corpus": 2,
+  "num_qrels": 2,
+  "input_format": "beir_configs"
+}

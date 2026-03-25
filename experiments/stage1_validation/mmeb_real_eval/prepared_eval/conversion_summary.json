@@ -1,0 +1,48 @@
+{
+  "raw_root": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/raw",
+  "output_root": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/prepared_eval",
+  "modalities": [
+    "image",
+    "video",
+    "visdoc"
+  ],
+  "datasets": [
+    {
+      "dataset_key": "ViDoRe_arxivqa",
+      "modality": "visdoc",
+      "input": "vidore/arxivqa_test_subsampled_beir",
+      "subset": null,
+      "split": "test",
+      "is_local_input": false,
+      "media_root": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/raw/visdoc-tasks/ViDoRe_arxivqa",
+      "image_root": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/raw/visdoc-tasks/ViDoRe_arxivqa",
+      "video_root": null,
+      "output_dir": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/prepared_eval/ViDoRe_arxivqa",
+      "status": "converted",
+      "convert_command": [
+        "/home/szn/zht/miniconda3/envs/costa/bin/python",
+        "/home/szn/zhangx/explore/Nexus/tools/multimodal_retrieval/convert_vlm2vec_eval_to_nexus.py",
+        "--input",
+        "vidore/arxivqa_test_subsampled_beir",
+        "--output-dir",
+        "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/prepared_eval/.ViDoRe_arxivqa.tmp_convert",
+        "--dataset-name",
+        "ViDoRe_arxivqa",
+        "--split",
+        "test",
+        "--sequence-mode",
+        "image",
+        "--input-format",
+        "beir_configs",
+        "--max-rows",
+        "2",
+        "--media-root",
+        "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/raw/visdoc-tasks/ViDoRe_arxivqa",
+        "--image-root",
+        "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/raw/visdoc-tasks/ViDoRe_arxivqa"
+      ],
+      "staging_output_dir": "/home/szn/zhangx/explore/Nexus/experiments/stage1_validation/mmeb_real_eval/prepared_eval/.ViDoRe_arxivqa.tmp_convert",
+      "eval_config_path": "experiments/stage1_validation/mmeb_real_eval/eval_configs/ViDoRe_arxivqa.eval_config.json"
+    }
+  ]
+}

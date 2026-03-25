@@ -22,7 +22,7 @@ STAGE_TO_MODALITIES = {
 
 DEFAULT_DATA_CONFIG = {
     "train_data": [],
-    "cache_path": "./.cache",
+    "cache_path": None,
     "media_root": None,
     "train_group_size": 4,
     "query_max_len": 512,
@@ -344,6 +344,7 @@ def write_stage_configs(write_dir: Path, summary_rows: List[Dict]):
     for stage_name, train_data in stage_to_train_data.items():
         config = dict(DEFAULT_DATA_CONFIG)
         config["train_data"] = train_data
+        config["cache_path"] = str(write_dir.parent / "_cache" / stage_name)
         with (write_dir / f"{stage_name}_data_config.json").open("w", encoding="utf-8") as output_file:
             json.dump(config, output_file, indent=2, ensure_ascii=False)
 

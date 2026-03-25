@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -30,7 +31,7 @@ DEFAULT_EVAL_CONFIG = {
     "splits": ["test"],
     "corpus_embd_save_dir": "./outputs/multimodal_eval_cache",
     "search_top_k": 100,
-    "cache_path": "./.cache",
+    "cache_path": None,
     "ignore_identical_ids": False,
     "force_redownload": False,
     "overwrite": True,
@@ -114,6 +115,11 @@ def parse_args():
         "--overwrite",
         action="store_true",
         help="Overwrite existing converted dataset directories and config files.",
+    )
+    parser.add_argument(
+        "--write-configs-only",
+        action="store_true",
+        help="Only write eval_config files and summary rows without re-running dataset conversion.",
     )
     parser.add_argument(
         "--dry-run",
@@ -301,6 +307,9 @@ def build_convert_command(entry: Dict, resolved: Dict[str, Optional[str]], outpu
         "--sequence-mode",
         "video" if entry.get("modality") == "video" else "image",
     ]
+    metadata_repo = entry.get("metadata_hf_repo") or ""
+    if entry.get("dataset_parser") in {"vidore", "visrag"} or metadata_repo.startswith("vidore/"):
+        command.extend(["--input-format", "beir_configs"])
     if resolved.get("subset") not in [None, ""]:
         command.extend(["--subset", str(resolved["subset"])])
     if args.cache_dir not in [None, ""]:
@@ -334,11 +343,33 @@ def build_eval_config(
             "image_root": resolved.get("image_root"),
             "video_root": resolved.get("video_root"),
             "corpus_embd_save_dir": str(output_root / "_cache" / dataset_key),
+            "cache_path": str(output_root / "_cache" / "hf_datasets"),
             "eval_output_dir": str(output_root / "_results" / dataset_key),
             "eval_output_path": str(output_root / "_results" / dataset_key / "summary.md"),
         }
     )
     return eval_config
+
+
+def plan_conversion_output_dir(dataset_output_dir: Path, overwrite: bool) -> Path:
+    if not dataset_output_dir.exists():
+        return dataset_output_dir
+    if not overwrite:
+        raise FileExistsError(
+            f"Refusing to overwrite existing dataset directory without `--overwrite`: {dataset_output_dir}"
+        )
+    staging_output_dir = dataset_output_dir.parent / f".{dataset_output_dir.name}.tmp_convert"
+    if staging_output_dir.exists():
+        shutil.rmtree(staging_output_dir)
+    return staging_output_dir
+
+
+def finalize_conversion_output_dir(staging_output_dir: Path, dataset_output_dir: Path):
+    if staging_output_dir == dataset_output_dir:
+        return
+    if dataset_output_dir.exists():
+        shutil.rmtree(dataset_output_dir)
+    staging_output_dir.rename(dataset_output_dir)
 
 
 def write_json(path: Path, payload: Dict[str, object], overwrite: bool = False):
@@ -371,11 +402,7 @@ def main():
         dataset_key = entry["dataset_key"]
         resolved = resolve_eval_source(entry, raw_root=raw_root)
         dataset_output_dir = output_root / dataset_key
-
-        if dataset_output_dir.exists() and not args.overwrite:
-            raise FileExistsError(
-                f"Refusing to overwrite existing dataset directory without `--overwrite`: {dataset_output_dir}"
-            )
+        staging_output_dir = plan_conversion_output_dir(dataset_output_dir, overwrite=args.overwrite)
 
         dataset_summary = {
             "dataset_key": dataset_key,
@@ -400,8 +427,10 @@ def main():
                 f"Local metadata input was not found for `{dataset_key}` under `{raw_root}` and `--local-only` is set."
             )
 
-        command = build_convert_command(entry=entry, resolved=resolved, output_dir=dataset_output_dir, args=args)
+        command = build_convert_command(entry=entry, resolved=resolved, output_dir=staging_output_dir, args=args)
         dataset_summary["convert_command"] = command
+        if staging_output_dir != dataset_output_dir:
+            dataset_summary["staging_output_dir"] = str(staging_output_dir)
 
         if args.write_eval_configs_dir not in [None, ""]:
             eval_config = build_eval_config(entry=entry, output_root=output_root, resolved=resolved)
@@ -409,19 +438,18 @@ def main():
             write_json(config_path, eval_config, overwrite=args.overwrite)
             dataset_summary["eval_config_path"] = str(config_path)
 
+        if args.write_configs_only:
+            dataset_summary["status"] = "config_only"
+            summary["datasets"].append(dataset_summary)
+            continue
+
         if args.dry_run:
             dataset_summary["status"] = "dry_run"
             summary["datasets"].append(dataset_summary)
             continue
 
-        if dataset_output_dir.exists():
-            for current_root, dir_names, file_names in os.walk(dataset_output_dir, topdown=False):
-                for file_name in file_names:
-                    os.remove(Path(current_root) / file_name)
-                for dir_name in dir_names:
-                    os.rmdir(Path(current_root) / dir_name)
-
         subprocess.run(command, check=True)
+        finalize_conversion_output_dir(staging_output_dir=staging_output_dir, dataset_output_dir=dataset_output_dir)
         dataset_summary["status"] = "converted"
         summary["datasets"].append(dataset_summary)
 

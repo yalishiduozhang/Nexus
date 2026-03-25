@@ -4,6 +4,17 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-python}"
 TMP_ROOT="${TMP_ROOT:-/tmp/nexus_mmeb_validation}"
+VLM2VEC_ROOT="${VLM2VEC_ROOT:-}"
+VALIDATE_REQUIRE_VLM2VEC="${VALIDATE_REQUIRE_VLM2VEC:-0}"
+
+if [[ -z "${VLM2VEC_ROOT}" ]]; then
+  for candidate in "${REPO_ROOT}/../VLM2Vec" "${REPO_ROOT}/../vlm2vec"; do
+    if [[ -f "${candidate}/experiments/report_score_v2.py" && -f "${candidate}/src/constant/dataset_hf_path.py" ]]; then
+      VLM2VEC_ROOT="${candidate}"
+      break
+    fi
+  done
+fi
 
 rm -rf "${TMP_ROOT}"
 mkdir -p "${TMP_ROOT}"
@@ -43,12 +54,19 @@ cd "${REPO_ROOT}"
 "${PYTHON_BIN}" -m pytest tests/multimodal_retrieval -q
 
 echo "[3/4] inventory export"
-"${PYTHON_BIN}" tools/multimodal_retrieval/export_mmeb_v2_inventory.py \
-  --vlm2vec-root /home/szn/zhangx/explore/VLM2Vec \
-  --output "${TMP_ROOT}/mmeb_inventory_generated.md"
-"${PYTHON_BIN}" tools/multimodal_retrieval/export_mmeb_v2_manifest.py \
-  --vlm2vec-root /home/szn/zhangx/explore/VLM2Vec \
-  --output "${TMP_ROOT}/mmeb_manifest_generated.json"
+if [[ -n "${VLM2VEC_ROOT}" ]]; then
+  "${PYTHON_BIN}" tools/multimodal_retrieval/export_mmeb_v2_inventory.py \
+    --vlm2vec-root "${VLM2VEC_ROOT}" \
+    --output "${TMP_ROOT}/mmeb_inventory_generated.md"
+  "${PYTHON_BIN}" tools/multimodal_retrieval/export_mmeb_v2_manifest.py \
+    --vlm2vec-root "${VLM2VEC_ROOT}" \
+    --output "${TMP_ROOT}/mmeb_manifest_generated.json"
+elif [[ "${VALIDATE_REQUIRE_VLM2VEC}" == "1" ]]; then
+  echo "VLM2Vec root was not found. Set VLM2VEC_ROOT or place the repo next to Nexus." >&2
+  exit 1
+else
+  echo "Skipping inventory export because VLM2Vec was not found. Set VLM2VEC_ROOT to enable this check."
+fi
 
 echo "[4/4] conversion smoke"
 cat > "${TMP_ROOT}/train_pair.jsonl" <<'EOF'

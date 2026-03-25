@@ -10,12 +10,21 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
-from vlm2vec_manifest_lib import build_eval_manifest_entries, build_train_manifest, load_vlm2vec_context
+from vlm2vec_manifest_lib import (
+    build_eval_manifest_entries,
+    build_train_manifest,
+    discover_vlm2vec_root,
+    load_vlm2vec_context,
+)
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--vlm2vec-root", required=True, help="Path to the local VLM2Vec repository.")
+    parser.add_argument(
+        "--vlm2vec-root",
+        default=None,
+        help="Path to the local VLM2Vec repository. Defaults to auto-discovery via VLM2VEC_ROOT or sibling repos.",
+    )
     parser.add_argument("--output", required=True, help="Output markdown path.")
     return parser.parse_args()
 
@@ -39,7 +48,11 @@ def format_mapping_table(rows: Iterable[Dict[str, Any]], columns: List[str]) -> 
 
 def main():
     args = parse_args()
-    vlm2vec_root = os.path.abspath(args.vlm2vec_root)
+    vlm2vec_root = discover_vlm2vec_root(args.vlm2vec_root)
+    if vlm2vec_root is None:
+        raise FileNotFoundError(
+            "Unable to locate a local VLM2Vec repository. Pass --vlm2vec-root explicitly or set VLM2VEC_ROOT."
+        )
 
     context = load_vlm2vec_context(vlm2vec_root)
     eval_entries = build_eval_manifest_entries(vlm2vec_root)

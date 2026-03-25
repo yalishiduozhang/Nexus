@@ -3,6 +3,7 @@
 
 import argparse
 import base64
+import io
 import json
 import os
 import tempfile
@@ -90,6 +91,15 @@ def parse_args():
         help="How to interpret multi-frame candidate/query media.",
     )
     parser.add_argument("--query-prefix", default="q", help="Prefix used for generated query ids.")
+    parser.add_argument(
+        "--input-format",
+        default="auto",
+        choices=["auto", "pair_style", "beir_configs"],
+        help="How to interpret the input. `beir_configs` expects separate HF configs such as queries/corpus/qrels.",
+    )
+    parser.add_argument("--queries-config", default="queries", help="Queries config used by `beir_configs` mode.")
+    parser.add_argument("--corpus-config", default="corpus", help="Corpus config used by `beir_configs` mode.")
+    parser.add_argument("--qrels-config", default="qrels", help="Qrels config used by `beir_configs` mode.")
     return parser.parse_args()
 
 
@@ -140,6 +150,26 @@ def load_any_dataset(path_or_name: str, subset: Optional[str], split: str, cache
         raise ValueError(f"Unsupported dataset object returned from {path_or_name}: {type(dataset)}")
 
     return dataset
+
+
+def load_beir_eval_components(
+    path_or_name: str,
+    queries_config: str,
+    corpus_config: str,
+    qrels_config: str,
+    split: str,
+    cache_dir: Optional[str] = None,
+):
+    Dataset, DatasetDict, IterableDataset, IterableDatasetDict, load_dataset, load_from_disk = require_datasets()
+    del Dataset, DatasetDict, IterableDataset, IterableDatasetDict, load_from_disk
+    if cache_dir is None:
+        cache_dir = default_hf_datasets_cache()
+
+    return (
+        load_dataset(path_or_name, queries_config, split=split, cache_dir=cache_dir),
+        load_dataset(path_or_name, corpus_config, split=split, cache_dir=cache_dir),
+        load_dataset(path_or_name, qrels_config, split=split, cache_dir=cache_dir),
+    )
 
 
 def iter_rows(dataset, max_rows: Optional[int] = None):
@@ -277,6 +307,38 @@ def first_text_value(value: Any) -> str:
     return value if isinstance(value, str) else ""
 
 
+def clean_instruction_text(value: Any) -> str:
+    text = first_text_value(value)
+    if text == "":
+        return ""
+    return text.replace("<|image_1|>", "").replace(" \n", "\n").strip()
+
+
+def combine_instruction_and_text(instruction: Any, text: Any) -> str:
+    parts = [clean_instruction_text(instruction), first_text_value(text).strip()]
+    return " ".join(part for part in parts if part).strip()
+
+
+def serialize_image_like(value: Any) -> Optional[Any]:
+    if value in [None, "", []]:
+        return None
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        return value
+    if isinstance(value, bytes):
+        return {"b64": base64.b64encode(value).decode("utf-8")}
+
+    image_save = getattr(value, "save", None)
+    if callable(image_save):
+        buffer = io.BytesIO()
+        image_format = getattr(value, "format", None) or "PNG"
+        value.save(buffer, format=image_format)
+        return {"b64": base64.b64encode(buffer.getvalue()).decode("utf-8")}
+
+    return None
+
+
 def build_eval_item(text_value: Any, media_value: Any, sequence_mode: str) -> Dict[str, Any]:
     item = {}
     text = first_text_value(text_value)
@@ -286,14 +348,173 @@ def build_eval_item(text_value: Any, media_value: Any, sequence_mode: str) -> Di
     return item
 
 
+def row_uses_instruction_style_schema(row: Dict[str, Any]) -> bool:
+    return any(
+        key in row
+        for key in [
+            "qry_inst",
+            "qry_img_path",
+            "tgt_inst",
+            "tgt_img_path",
+        ]
+    )
+
+
+def build_instruction_style_query(row: Dict[str, Any], sequence_mode: str) -> Dict[str, Any]:
+    item = {}
+    query_text = combine_instruction_and_text(row.get("qry_inst"), row.get("qry_text"))
+    if query_text not in [None, ""]:
+        item["text"] = query_text
+
+    if row.get("qry_img_path") not in [None, "", []]:
+        attach_media(item, [row.get("qry_img_path")], sequence_mode=sequence_mode)
+    elif row.get("qry_video_path") not in [None, "", []]:
+        attach_media(item, [row.get("qry_video_path")], sequence_mode="video")
+    return item
+
+
+def build_instruction_style_candidates(row: Dict[str, Any], sequence_mode: str) -> List[Dict[str, Any]]:
+    target_texts = row.get("tgt_text") or []
+    target_image_paths = row.get("tgt_img_path") or []
+    if not isinstance(target_texts, list):
+        target_texts = [target_texts]
+    if not isinstance(target_image_paths, list):
+        target_image_paths = [target_image_paths]
+
+    candidate_count = max(len(target_texts), len(target_image_paths))
+    if candidate_count == 0:
+        return []
+
+    candidates = []
+    for index in range(candidate_count):
+        caption = target_texts[index] if index < len(target_texts) else None
+        image_path = target_image_paths[index] if index < len(target_image_paths) else None
+        candidate = {}
+
+        candidate_text = combine_instruction_and_text(row.get("tgt_inst"), caption)
+        if candidate_text not in [None, ""]:
+            candidate["text"] = candidate_text
+        if image_path not in [None, "", []]:
+            attach_media(candidate, [image_path], sequence_mode=sequence_mode)
+
+        name_parts = []
+        if image_path not in [None, "", []]:
+            name_parts.append(str(image_path))
+        clean_caption = first_text_value(caption).strip()
+        if clean_caption not in [None, ""]:
+            name_parts.append(clean_caption)
+        candidate["_name"] = ":".join(name_parts) if len(name_parts) > 1 else (name_parts[0] if name_parts else f"cand_{index}")
+        candidates.append(candidate)
+    return candidates
+
+
+def convert_instruction_style_row(
+    row_index: int,
+    row: Dict[str, Any],
+    args,
+):
+    sequence_mode = resolve_sequence_mode(args, row=row)
+    query_record = {"_id": f"{args.query_prefix}{row_index}"}
+    query_record.update(build_instruction_style_query(row, sequence_mode=sequence_mode))
+
+    candidates = build_instruction_style_candidates(row, sequence_mode=sequence_mode)
+    corpus_records = []
+    qrels = []
+    for candidate_index, candidate in enumerate(candidates):
+        corpus_id = candidate.pop("_name")
+        corpus_record = {"_id": corpus_id}
+        corpus_record.update(candidate)
+        corpus_records.append(corpus_record)
+        if candidate_index == 0:
+            qrels.append({"query-id": query_record["_id"], "corpus-id": corpus_id, "score": 1})
+    return query_record, corpus_records, qrels
+
+
 def write_jsonl(path: str, rows: Iterable[Dict[str, Any]]):
     with open(path, "w", encoding="utf-8") as output_file:
         for row in rows:
             output_file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def convert_beir_eval_configs(args):
+    queries_dataset, corpus_dataset, qrels_dataset = load_beir_eval_components(
+        path_or_name=args.input,
+        queries_config=args.queries_config,
+        corpus_config=args.corpus_config,
+        qrels_config=args.qrels_config,
+        split=args.split,
+        cache_dir=args.cache_dir,
+    )
+
+    selected_query_ids = None
+    if args.max_rows is not None:
+        queries_dataset = queries_dataset.select(range(min(args.max_rows, len(queries_dataset))))
+        selected_query_ids = {str(row["query-id"]) for row in queries_dataset}
+
+    filtered_qrels = []
+    relevant_corpus_ids = set()
+    for row in qrels_dataset:
+        query_id = str(row["query-id"])
+        corpus_id = str(row["corpus-id"])
+        if selected_query_ids is not None and query_id not in selected_query_ids:
+            continue
+        filtered_qrels.append({"query-id": query_id, "corpus-id": corpus_id, "score": int(row["score"])})
+        relevant_corpus_ids.add(corpus_id)
+
+    queries = []
+    for row in queries_dataset:
+        queries.append({"_id": str(row["query-id"]), "text": first_text_value(row.get("query"))})
+
+    corpus_rows = []
+    for row in corpus_dataset:
+        corpus_id = str(row["corpus-id"])
+        if relevant_corpus_ids and corpus_id not in relevant_corpus_ids:
+            continue
+        corpus_record = {"_id": corpus_id}
+        if first_text_value(row.get("text")) not in [None, ""]:
+            corpus_record["text"] = first_text_value(row.get("text"))
+        image_payload = serialize_image_like(row.get("image"))
+        if image_payload is not None:
+            if isinstance(image_payload, str):
+                corpus_record["image_path"] = image_payload
+            else:
+                corpus_record["image"] = image_payload
+        corpus_rows.append(corpus_record)
+
+    split_name = args.split
+    os.makedirs(args.output_dir, exist_ok=True)
+    write_jsonl(os.path.join(args.output_dir, "corpus.jsonl"), corpus_rows)
+    write_jsonl(os.path.join(args.output_dir, f"{split_name}_queries.jsonl"), queries)
+    write_jsonl(os.path.join(args.output_dir, f"{split_name}_qrels.jsonl"), filtered_qrels)
+
+    metadata = {
+        "dataset_name": args.dataset_name,
+        "source_input": args.input,
+        "subset": args.subset,
+        "split": args.split,
+        "media_root": args.media_root,
+        "image_root": args.image_root,
+        "video_root": args.video_root,
+        "num_queries": len(queries),
+        "num_corpus": len(corpus_rows),
+        "num_qrels": len(filtered_qrels),
+        "input_format": "beir_configs",
+    }
+    with open(os.path.join(args.output_dir, "dataset_meta.json"), "w", encoding="utf-8") as output_file:
+        json.dump(metadata, output_file, indent=2, ensure_ascii=False)
+
+    print(
+        f"Wrote {len(queries)} queries, {len(corpus_rows)} corpus rows, and {len(filtered_qrels)} qrels "
+        f"to {args.output_dir}"
+    )
+
+
 def main():
     args = parse_args()
+    if args.input_format == "beir_configs":
+        convert_beir_eval_configs(args)
+        return
+
     dataset = load_any_dataset(args.input, subset=args.subset, split=args.split, cache_dir=args.cache_dir)
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -302,6 +523,14 @@ def main():
     qrels: List[Dict[str, Any]] = []
 
     for row_index, row in iter_rows(dataset, max_rows=args.max_rows):
+        if row_uses_instruction_style_schema(row):
+            query_record, corpus_records, row_qrels = convert_instruction_style_row(row_index, row, args)
+            queries.append(query_record)
+            for corpus_record in corpus_records:
+                corpus[corpus_record["_id"]] = corpus_record
+            qrels.extend(row_qrels)
+            continue
+
         sequence_mode = resolve_sequence_mode(args, row=row)
         query_item = build_eval_item(row.get("query_text"), row.get("query_image"), sequence_mode=sequence_mode)
         query_id = f"{args.query_prefix}{row_index}"

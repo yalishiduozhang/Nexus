@@ -2,155 +2,230 @@
 
 更新时间：2026-03-25
 
-本文档专门回答两个实际问题：
+本文档主要回答四个问题：
 
-- 目前这套代码到底真实验证过哪些模型
-- 老师没有明确指定最终 backbone，这件事会不会影响第一阶段
+- 目前这套代码到底真实验证过哪些 backbone
+- 现在的环境版本是否会影响 backbone 选择
+- 老师没有明确指定最终 backbone，这会不会影响第一阶段
+- 如果准备进入第二阶段，环境应该怎么建
 
-## 一、当前真正已经完成真实验证的 backbone
+## 一、当前真实验证的 backbone 分层
 
-截至目前，真正做过训练 / 推理 / 评测闭环验证的 backbone 是：
+为了避免把“代码里写了兼容分支”和“真的验证过”混为一谈，这里把验证强度分成两层。
+
+### 第一层：完整闭环验证
+
+当前真正完成了“训练 / 推理 / 评测 / 真实 MMEB 子集评测”完整闭环验证的 backbone 是：
 
 - `Qwen/Qwen2-VL-2B-Instruct`
 
-本地离线模型路径为：
+本地离线路径：
 
 - `/tmp/qwen2vl2b_local`
 
-围绕这个 backbone，已经完成的真实验证包括：
+围绕这个 backbone，已经真实完成：
 
-- 基础模型单卡推理
-- 基础模型多设备推理一致性验证
-- 基础模型本地评测
+- 单卡推理
+- 多设备一致性验证
+- 本地 toy eval
 - one-step LoRA smoke 训练
-- LoRA 输出目录重新加载
-- LoRA 输出目录本地评测
+- LoRA 输出重载
 - 配置文件模式训练
 - 配置文件模式评测
+- 真实 MMEB 子集 `ViDoRe_arxivqa` end-to-end eval
 
-也就是说，当前“已经真实验证过”的不是抽象的接口，而是一条完整链路：
+这意味着：
 
-- 加载 backbone
-- 做 LoRA 微调
-- 保存训练输出
-- 重新加载训练输出
-- 做 embedding 推理
-- 做本地 retrieval 评测
+- 第一阶段不是停留在接口层面
+- 至少有一个真实 VLM backbone 已经把整个链条真正跑通
 
-## 二、当前代码层面的一等支持模型范围
+### 第二层：family-loader 真实验证
 
-目前在 `Nexus/modules/multimodal.py` 中，已经做了一等兼容处理的 `model_type` 主要包括：
+为了验证我们在 `Nexus/modules/multimodal.py` 里声明支持的 backbone family 不是“只写了分支”，本轮新增了：
+
+- `tools/multimodal_retrieval/validate_backbone_matrix.py`
+
+这个脚本会对每个 family：
+
+1. 检查当前 `transformers` 环境是否存在对应模型类
+2. 生成一个 tiny local checkpoint
+3. 走真实 `save_pretrained -> load_multimodal_backbone -> from_pretrained` 路径
+4. 输出 JSON / Markdown 报告
+
+#### 在当前 `costa` 环境中的结果
+
+环境：
+
+- Python：`/home/szn/zht/miniconda3/envs/costa/bin/python`
+- `transformers==4.52.3`
+
+结果：
+
+- `qwen2_vl`：通过
+- `qwen2_5_vl`：通过
+- `llava_next`：通过
+- `qwen3_vl`：不可用
+
+原因：
+
+- `transformers 4.52.3` 中没有 `Qwen3VLForConditionalGeneration`
+
+产物：
+
+- `experiments/stage1_validation/backbone_matrix/costa/report.json`
+- `experiments/stage1_validation/backbone_matrix/costa/summary.md`
+
+#### 在额外隔离环境中的结果
+
+为了验证 `qwen3_vl`，本轮额外创建了一个不污染现有环境的临时验证环境：
+
+- `/tmp/nexus_stage1_tf457_env`
+
+其中安装：
+
+- `transformers==4.57.3`
+
+在这个环境中，四个 family 全部通过：
 
 - `qwen2_vl`
 - `qwen2_5_vl`
 - `qwen3_vl`
 - `llava_next`
 
-其中：
+产物：
 
-- `qwen2_vl`、`qwen2_5_vl`、`qwen3_vl` 已纳入 chat-template 与视频输入相关兼容逻辑
-- `llava_next` 已纳入通用 conditional generation 加载分支
+- `experiments/stage1_validation/backbone_matrix/transformers_4_57_3/report.json`
+- `experiments/stage1_validation/backbone_matrix/transformers_4_57_3/summary.md`
 
-这表示代码框架不是只写死给某一个具体 checkpoint 用，而是已经面向一类主流多模态 VLM backbone 做了适配。
+## 二、当前最准确的结论
 
-## 三、当前“代码支持”和“真实验证”之间要严格区分
+如果老师问“你们现在适配的是哪个模型”，最准确的说法是：
 
-这点汇报时必须说清楚，不能混淆。
+> 当前完整闭环真实跑通的 backbone 是 `Qwen2-VL-2B-Instruct`。同时，代码层已面向 `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 四个主流多模态 VLM family 做了适配，并且我们已经对这四个 family 做了真实的本地 checkpoint 加载验证；其中 `Qwen3-VL` 的验证是在隔离的 `transformers 4.57.3` 环境里完成的。
 
-当前可以真实确认的事实是：
+这样说的好处是：
 
-- `Qwen2-VL-2B-Instruct` 已经完成真实 smoke 验证
-- `Qwen3-VL` 家族已经做了代码层兼容准备
-- 但 `Qwen3-VL` 家族尚未在本仓库里完成同等级别的真实训练 / 评测闭环验证
-- `Qwen2.5-VL`、`Llava-Next` 目前也属于“代码已适配，但未做同等强度真实验收”的状态
+- 真实
+- 不夸大
+- 也能体现第一阶段已经把后续 backbone 切换的底座准备好了
 
-因此，当前最准确的说法不是“所有 backbone 都已经验证完毕”，而是：
+## 三、老师是否已经明确指定最终 backbone
 
-- 第一阶段的代码底座已经能支持这几类 backbone
-- 其中 `Qwen2-VL-2B-Instruct` 已被用作真实 smoke backbone 成功打通闭环
+从老师给出的原始要求，只能严格推出下面这些事实：
 
-## 四、老师是否已经明确指定最终 backbone
+- 第二阶段要基于开源 VLM backbone 做训练
+- 目标希望超过 `Qwen3-VL-Embedding-8B`
 
-根据老师给出的原始要求，目前只能确定以下事实：
+但这段话本身并不能唯一推出：
 
-- 第二阶段要“基于开源的 VLM backbone 进行训练”
-- 目标效果希望超过 `Qwen3-VL-Embedding-8B`
+- 最终必须使用 `Qwen3-VL`
+- 或者必须是 `8B`
+- 或者必须使用某个固定 checkpoint
 
-但从这段话本身，还不能严格推出：
+所以当前最稳妥的判断是：
 
-- 老师已经指定必须使用 `Qwen3-VL`
-- 或者必须使用某个固定参数规模，例如 `8B`
+- 老师给了一个强基线和方向
+- 但没有在任务原文里唯一指定最终 backbone
 
-因此，当前最稳妥的判断是：
+## 四、这个不确定性会不会影响第一阶段
 
-- 老师明确给了一个强基线和目标方向
-- 但没有在任务原文中唯一确定最终训练 backbone
-
-## 五、这个不确定性会不会影响第一阶段
-
-对第一阶段的影响不大。
+对第一阶段影响不大。
 
 原因是第一阶段的核心目标是把代码底座整理好，确保支持：
 
 - 多模态微调
 - 多模态推理
 - 多模态评测
-- 数据准备与配置化运行
+- 数据准备
+- backbone 切换时的基本兼容
 
-这些能力并不要求一开始就把最终 backbone 唯一确定下来。
+这些能力不要求一开始就把最终 backbone 唯一确定下来。
 
-只要代码在 backbone 设计上不是写死的，并且已经在至少一个真实 VLM backbone 上打通过完整闭环，那么第一阶段就具有真实性和可用性。
+只要满足下面两点，第一阶段就算真正完成：
 
-当前我们已经满足这个要求。
+1. 至少一个真实 backbone 完成闭环
+2. 其他候选 backbone family 不是写死的，且已经做了真实加载验证
 
-## 六、这个不确定性会影响第二阶段哪些内容
+当前这两点都已经满足。
 
-虽然不妨碍第一阶段完成，但会明显影响第二阶段训练方案，主要包括：
+## 五、这个不确定性会影响第二阶段哪些内容
 
-- 环境版本要求
+会明显影响下面这些事情：
+
+- 正式训练环境版本
 - GPU 显存需求
-- 训练 batch size 和梯度累积策略
-- 是否只能 LoRA，还是可以做更大规模微调
-- 图片 / 视频输入长度设置
-- 最终可接受的训练时长
+- batch size 与梯度累积
+- 是否只能 LoRA，还是能做更大规模微调
+- 图像 / 视频输入长度
+- 训练时长与资源预算
 
 尤其要注意：
 
-- `Qwen3-VL` 家族通常更依赖较新的 `transformers` 支持
-- 更大参数规模也会直接影响 GPU 资源规划
+- `Qwen3-VL` 正式使用时，环境要满足较新的 `transformers`
+- 更大参数规模会直接影响显存和训练 recipe
 
-## 七、当前环境现状
+## 六、当前环境策略
 
-本轮第一阶段验收实际使用的是隔离环境：
+### 1. 当前验收环境
+
+本轮第一阶段主体验收使用的是：
 
 - `costa`
 
-该环境中已经确认存在并可用的关键组件包括：
+该环境里已经确认可用：
 
 - `transformers==4.52.3`
 - `accelerate==0.29.1`
-- `faiss==1.13.2`
-- `pytrec_eval` 已安装
+- `faiss`
+- `pytrec_eval`
 
-说明：
+它足以支撑：
 
-- 这个环境已经足够支撑当前的 `Qwen2-VL` smoke 验证
-- 如果后续明确转向 `Qwen3-VL` 正式训练，建议再创建一个全新的项目专用环境，并按照 `.[eval,multimodal]` 的要求重新安装依赖
+- `Qwen2-VL` smoke 训练与评测
+- `Qwen2.5-VL / Llava-Next` loader family 验证
 
-## 八、目前最建议向老师确认的几个问题
+但它不足以直接支撑：
 
-如果你准备和老师沟通，我建议优先确认下面这些点：
+- `Qwen3-VL` family 验证
 
-- 第二阶段最终希望优先尝试的 backbone 家族是不是 `Qwen3-VL`
-- 目标参数规模是 `2B / 4B / 8B` 还是其他规模
-- 是否允许先做“小模型验证 + 大模型冲榜”的两阶段策略
-- 实验资源大概能用到几张 GPU、每张多大显存
-- 最终更看重完整 MMEB v2 排行榜，还是先把某些模态子集做强
+### 2. 推荐的正式环境构建方式
 
-这些问题一旦明确，第二阶段的训练配方就可以更快收敛。
+仓库内已经准备了：
 
-## 九、当前最准确的汇报口径
+- `tools/multimodal_retrieval/create_conda_env.sh`
+- `tools/multimodal_retrieval/environment.yml`
 
-如果老师问“你们现在适配的是哪个模型”，最准确的回答是：
+推荐方式是：
 
-> 当前已经真实打通过的 smoke backbone 是 `Qwen2-VL-2B-Instruct`。与此同时，代码层已经兼容 `Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Llava-Next` 这一类主流多模态 VLM family。老师原文没有唯一指定最终 backbone，因此这不会阻碍第一阶段完成，但会影响第二阶段的正式训练方案，建议尽快确认。
+- 新建全新隔离环境
+- 安装 `.[eval,multimodal]`
+- 安装后直接跑 `validate_stack.sh`
+
+对应脚本：
+
+- `tools/multimodal_retrieval/create_conda_env.sh`
+
+该脚本现在会：
+
+- 自动创建隔离环境
+- 安装依赖
+- 打印关键版本
+- 自动执行验证脚本
+
+对于第二阶段正式训练，更建议直接走这条路径，而不是继续沿用历史遗留的 `costa` 环境。
+
+## 七、最建议问老师的一个问题
+
+如果你现在准备跟老师确认 backbone，我建议直接这样问：
+
+> 老师好，我们第一阶段已经把 Nexus 里的多模态 embedding 训练、推理、评测和 MMEB 数据准备链路整理好了，并且已经用 Qwen2-VL-2B 做了真实闭环验证。接下来为了推进第二阶段正式训练，我想确认一下，您更希望我们优先采用哪条 backbone 路线？是以 Qwen3-VL 系列为主，还是允许我们先用较小模型完成方案验证，再逐步切到更大模型冲榜？
+
+如果想再具体一点，可以继续补一句：
+
+> 另外，您更倾向我们优先做哪个参数规模，例如 2B、4B、8B，还是先不限定，按现有算力条件选择最合适的方案？
+
+## 八、当前可直接汇报的口径
+
+最稳妥的汇报口径如下：
+
+> 第一阶段已经完成。我们已经把 Nexus 整理成一个支持多模态 embedding 微调、推理、评测和 MMEB 数据准备的代码底座。当前完整闭环真实跑通的 backbone 是 Qwen2-VL-2B-Instruct；同时，Qwen2-VL、Qwen2.5-VL、Qwen3-VL、Llava-Next 四个 backbone family 都已经做了真实加载验证，其中 Qwen3-VL 是在隔离的 `transformers 4.57.3` 环境中验证通过的。因此，第一阶段不会因为最终 backbone 尚未唯一确定而被卡住，但第二阶段的正式训练方案仍建议尽快和老师确认。

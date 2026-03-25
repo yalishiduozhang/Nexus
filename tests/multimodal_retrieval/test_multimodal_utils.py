@@ -248,3 +248,35 @@ def test_encode_single_device_casts_bfloat16_before_numpy():
 
     assert isinstance(embeddings, np.ndarray)
     assert embeddings.dtype == np.float32
+
+
+def test_processor_adapter_retries_without_truncation_on_mm_token_mismatch():
+    adapter = MultimodalProcessorAdapter.__new__(MultimodalProcessorAdapter)
+    adapter.processor = None
+    adapter.model_type = "qwen2_vl"
+    adapter.use_chat_template = False
+    tiny_png_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Yp7cAAAAASUVORK5CYII="
+
+    class FakeProcessor:
+        def __init__(self):
+            self.calls = []
+
+        def __call__(self, **kwargs):
+            self.calls.append(kwargs)
+            if kwargs.get("truncation"):
+                raise ValueError("Mismatch in `image` token count between text and `input_ids`.")
+            return {"input_ids": [[1, 2, 3]], "attention_mask": [[1, 1, 1]]}
+
+    adapter.processor = FakeProcessor()
+
+    result = MultimodalProcessorAdapter._encode_single(
+        adapter,
+        item={"text": "question", "images": [{"b64": tiny_png_b64}], "videos": []},
+        max_length=8,
+    )
+
+    assert result["input_ids"] == [[1, 2, 3]]
+    assert adapter.processor.calls[0]["truncation"] is True
+    assert adapter.processor.calls[0]["max_length"] == 8
+    assert adapter.processor.calls[1]["truncation"] is False
+    assert "max_length" not in adapter.processor.calls[1]

@@ -51,9 +51,15 @@ Example:
 
 ```bash
 python tools/multimodal_retrieval/export_mmeb_v2_inventory.py \
-  --vlm2vec-root ../VLM2Vec \
   --output docs/multimodal_retrieval/MMEB_v2_inventory_generated.md
 ```
+
+The script auto-discovers `VLM2Vec` from:
+
+- `VLM2VEC_ROOT`
+- a sibling repo such as `../VLM2Vec`
+
+You can still pass `--vlm2vec-root` explicitly when needed.
 
 ### `export_mmeb_v2_manifest.py`
 
@@ -61,7 +67,6 @@ Generate a machine-readable JSON manifest for the MMEB v2 eval sets and public t
 
 ```bash
 python tools/multimodal_retrieval/export_mmeb_v2_manifest.py \
-  --vlm2vec-root ../VLM2Vec \
   --output docs/multimodal_retrieval/MMEB_v2_manifest.json
 ```
 
@@ -151,6 +156,12 @@ This script understands both:
 
 For video datasets it prefers `frame_root` as the effective `image_root`, which matches how VLM2Vec eval loaders consume frame sequences during retrieval evaluation.
 
+New robustness notes:
+
+- Generated `eval_config.json` files now place `cache_path` inside the chosen `output-root`, instead of defaulting to the repo root.
+- `--write-configs-only` lets you refresh `eval_config.json` files without re-running dataset conversion or touching remote metadata.
+- When `--overwrite` is used, conversion now writes to a staging directory first and only replaces the final dataset directory after the new conversion succeeds.
+
 ### `check_idle_gpus.py`
 
 Inspect shared GPUs before starting training:
@@ -211,6 +222,42 @@ Run syntax checks, multimodal tests, inventory export, and conversion smoke test
 ```bash
 PYTHON_BIN=/home/szn/zht/miniconda3/envs/costa/bin/python \
 bash tools/multimodal_retrieval/validate_stack.sh
+```
+
+If `VLM2Vec` is not available locally, the script skips the inventory-export step by default and continues with the remaining checks. To require that step, set:
+
+```bash
+VALIDATE_REQUIRE_VLM2VEC=1 \
+PYTHON_BIN=/path/to/python \
+bash tools/multimodal_retrieval/validate_stack.sh
+```
+
+### `validate_backbone_matrix.py`
+
+Validate whether the current environment can really instantiate and reload the backbone families that Nexus claims to support:
+
+```bash
+PYTHONPATH=/path/to/Nexus \
+python tools/multimodal_retrieval/validate_backbone_matrix.py \
+  --output-dir experiments/stage1_validation/backbone_matrix/current_env \
+  --label current_env
+```
+
+This script:
+
+- checks whether each family-specific `transformers` class exists in the current environment
+- builds a tiny local checkpoint for each available family
+- runs the real `save_pretrained -> load_multimodal_backbone -> from_pretrained` path
+- writes both `report.json` and `summary.md`
+
+If you need to require every requested family to be present and load successfully, add:
+
+```bash
+PYTHONPATH=/path/to/Nexus \
+python tools/multimodal_retrieval/validate_backbone_matrix.py \
+  --output-dir /tmp/backbone_matrix \
+  --fail-on-unavailable \
+  --fail-on-failure
 ```
 
 ## Environment

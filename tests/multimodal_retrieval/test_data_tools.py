@@ -45,6 +45,10 @@ prepare_eval_tool = load_module_from_path(
     "prepare_mmeb_v2_eval_data",
     "tools/multimodal_retrieval/prepare_mmeb_v2_eval_data.py",
 )
+convert_eval = load_module_from_path(
+    "convert_vlm2vec_eval_to_nexus",
+    "tools/multimodal_retrieval/convert_vlm2vec_eval_to_nexus.py",
+)
 gpu_tool = load_module_from_path(
     "check_idle_gpus",
     "tools/multimodal_retrieval/check_idle_gpus.py",
@@ -277,6 +281,19 @@ def test_prepare_public_data_augment_source_for_legacy_manifest():
     assert selected[0]["download_patterns"] == ["VOC2007/original-*", "images_zip/VOC2007.zip"]
 
 
+def test_discover_vlm2vec_root_prefers_explicit_candidate(tmp_path):
+    vlm2vec_root = tmp_path / "VLM2Vec"
+    (vlm2vec_root / "experiments" / "public" / "eval").mkdir(parents=True)
+    (vlm2vec_root / "src" / "constant").mkdir(parents=True)
+    (vlm2vec_root / "experiments" / "report_score_v2.py").write_text("modality2dataset = {}", encoding="utf-8")
+    (vlm2vec_root / "src" / "constant" / "dataset_hf_path.py").write_text("EVAL_DATASET_HF_PATH = {}", encoding="utf-8")
+    (vlm2vec_root / "experiments" / "public" / "eval" / "image.yaml").write_text("{}", encoding="utf-8")
+
+    discovered = manifest_lib.discover_vlm2vec_root(search_roots=[str(vlm2vec_root)], env={})
+
+    assert discovered == str(vlm2vec_root.resolve())
+
+
 def test_prepare_eval_source_resolves_local_image_task(tmp_path):
     raw_root = tmp_path / "raw"
     metadata_dir = raw_root / "vlm2vec_eval" / "metadata" / "ziyjiang--MMEB_Test_Instruct" / "HatefulMemes"
@@ -371,6 +388,8 @@ def test_build_eval_convert_command_uses_remote_repo_when_allowed(tmp_path):
     )
 
     assert command[:4] == ["python", str(prepare_eval_tool.SCRIPT_DIR / "convert_vlm2vec_eval_to_nexus.py"), "--input", "vidore/arxivqa_test_subsampled_beir"]
+    assert "--input-format" in command
+    assert "beir_configs" in command
     assert "--sequence-mode" in command
     assert "image" in command
     assert "--max-rows" in command
@@ -392,6 +411,83 @@ def test_build_eval_config_writes_single_dataset_config(tmp_path):
     assert config["dataset_names"] == ["MSVD"]
     assert config["splits"] == ["test"]
     assert config["image_root"] == str(tmp_path / "raw" / "frames")
+    assert config["cache_path"] == str(tmp_path / "eval_ready" / "_cache" / "hf_datasets")
+
+
+def test_write_stage_configs_uses_local_runtime_cache(tmp_path):
+    write_dir = tmp_path / "configs"
+    summary_rows = [
+        {
+            "source_name": "toy-image",
+            "modality": "image",
+            "status": "converted",
+            "output": str(tmp_path / "prepared" / "toy-image.jsonl"),
+        }
+    ]
+
+    prepare_train_tool.write_stage_configs(write_dir, summary_rows)
+
+    config = json.loads((write_dir / "stage_a_data_config.json").read_text(encoding="utf-8"))
+
+    assert config["train_data"] == [str(tmp_path / "prepared" / "toy-image.jsonl")]
+    assert config["cache_path"] == str(tmp_path / "_cache" / "stage_a")
+
+
+def test_convert_instruction_style_eval_row_for_image_cls():
+    args = types.SimpleNamespace(
+        sequence_mode="auto",
+        dataset_name="HatefulMemes",
+        query_prefix="q",
+    )
+    row = {
+        "qry_text": "",
+        "qry_img_path": "HatefulMemes/image_0.jpg",
+        "tgt_text": ["Yes", "No"],
+        "tgt_img_path": ["", ""],
+        "qry_inst": "<|image_1|>\nRepresent the given image for binary classification.",
+        "tgt_inst": "",
+    }
+
+    query_record, corpus_records, qrels = convert_eval.convert_instruction_style_row(0, row, args)
+
+    assert query_record["_id"] == "q0"
+    assert query_record["image_path"] == "HatefulMemes/image_0.jpg"
+    assert "Represent the given image" in query_record["text"]
+    assert [record["_id"] for record in corpus_records] == ["Yes", "No"]
+    assert qrels == [{"query-id": "q0", "corpus-id": "Yes", "score": 1}]
+
+
+def test_convert_instruction_style_eval_row_for_image_t2i():
+    args = types.SimpleNamespace(
+        sequence_mode="auto",
+        dataset_name="ImageSearch",
+        query_prefix="q",
+    )
+    row = {
+        "qry_inst": "Find the matching image",
+        "qry_text": "a cat on a sofa",
+        "tgt_inst": "",
+        "tgt_text": ["", ""],
+        "tgt_img_path": ["images/cat.jpg", "images/dog.jpg"],
+    }
+
+    query_record, corpus_records, qrels = convert_eval.convert_instruction_style_row(1, row, args)
+
+    assert query_record["_id"] == "q1"
+    assert query_record["text"] == "Find the matching image a cat on a sofa"
+    assert corpus_records[0]["_id"] == "images/cat.jpg"
+    assert corpus_records[0]["image_path"] == "images/cat.jpg"
+    assert qrels == [{"query-id": "q1", "corpus-id": "images/cat.jpg", "score": 1}]
+
+
+def test_serialize_image_like_supports_pil_images():
+    from PIL import Image
+
+    image = Image.new("RGB", (2, 2), color=(255, 0, 0))
+    payload = convert_eval.serialize_image_like(image)
+
+    assert isinstance(payload, dict)
+    assert "b64" in payload
 
 
 def test_check_idle_gpus_parses_csv_dump():

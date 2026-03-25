@@ -244,3 +244,48 @@
 - 老师第二阶段最终偏好的 backbone family 与参数规模
 - 更大规模数据混合与正式训练资源预算
 - `HatefulMemes` 在 manifest 中同时出现在 `image` 与 `visdoc` 的模态归类问题
+
+### 十、第一阶段收尾补强与真实 MMEB 子集闭环
+
+已完成：
+
+- 修复 `create_conda_env.sh` 的仓库路径鲁棒性
+- 修复 `validate_stack.sh` 对机器私有 `VLM2Vec` 路径的依赖
+- 修复真实 MMEB visdoc 子集转换所需的 instruction-style / BEIR-configs 兼容
+- 修复 Qwen2-VL 带图输入在 `truncation=max_length` 下的 image token mismatch
+- 修复 `prepare_mmeb_v2_eval_data.py` 默认把缓存写到仓库根目录的问题
+- 为 `prepare_mmeb_v2_eval_data.py` 增加 `--write-configs-only`
+- 修复 eval 数据覆盖写入时“失败先删旧数据”的风险，改成 staging 安全替换
+- 新增 `tools/multimodal_retrieval/validate_backbone_matrix.py`
+
+新增真实验证：
+
+- `pytest tests/multimodal_retrieval -q` 重新通过，结果提升为 `37 passed`
+- `tools/multimodal_retrieval/validate_stack.sh` 重新通过
+- 使用空闲 `GPU 2` 完成 `ViDoRe_arxivqa` 真实 MMEB 子集 end-to-end eval
+- 在 `costa` 环境下完成：
+  - `qwen2_vl`
+  - `qwen2_5_vl`
+  - `llava_next`
+  的 tiny-checkpoint 加载验证
+- 在额外隔离的 `transformers 4.57.3` 环境下完成：
+  - `qwen3_vl`
+  的真实加载验证
+
+关键结果：
+
+- 真实 MMEB 子集 `ViDoRe_arxivqa`：
+  - `ndcg_at_10 = 81.546`
+  - `recall_at_10 = 100.000`
+
+对应新增产物：
+
+- `experiments/stage1_validation/mmeb_real_eval/`
+- `experiments/stage1_validation/backbone_matrix/`
+
+更新后的最准确结论：
+
+- 第一阶段代码底座已经完成
+- `Qwen2-VL-2B-Instruct` 已完成完整闭环验证
+- 四个 backbone family 都完成了真实加载验证
+- 第二阶段正式训练仍需等待最终 backbone 决策和训练资源方案

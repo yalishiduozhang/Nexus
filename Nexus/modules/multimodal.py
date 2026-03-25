@@ -781,6 +781,16 @@ class MultimodalProcessorAdapter:
             if use_chat_template:
                 fallback_text = self._build_chat_text(item=item, images=fallback_images, videos=[])
             return self.processor(**_build_processor_kwargs(fallback_text, fallback_images, []))
+        except ValueError as exc:
+            mismatch_error = "Mismatch in `image` token count" in str(exc) or "Mismatch in `video` token count" in str(exc)
+            has_multimodal_inputs = len(processor_images) > 0 or len(processor_videos) > 0
+            if not mismatch_error or not has_multimodal_inputs or max_length is None:
+                raise
+
+            retry_kwargs = _build_processor_kwargs(text, processor_images, processor_videos)
+            retry_kwargs["truncation"] = False
+            retry_kwargs.pop("max_length", None)
+            return self.processor(**retry_kwargs)
 
     @staticmethod
     def _strip_singleton_batch(value: Any) -> Any:

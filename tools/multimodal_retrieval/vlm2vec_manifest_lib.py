@@ -4,7 +4,8 @@
 import ast
 import os
 import runpy
-from typing import Any, Dict, List, Tuple
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 MMEB_V2_MEDIA_REPO = "TIGER-Lab/MMEB-V2"
@@ -72,6 +73,53 @@ def normalize_tuple(value):
     if not isinstance(value, (tuple, list)):
         return [value]
     return list(value)
+
+
+def is_vlm2vec_root(path: Optional[str]) -> bool:
+    if path in [None, ""]:
+        return False
+    root = Path(path).expanduser().resolve()
+    required_paths = [
+        root / "experiments" / "report_score_v2.py",
+        root / "src" / "constant" / "dataset_hf_path.py",
+        root / "experiments" / "public" / "eval" / "image.yaml",
+    ]
+    return all(candidate.exists() for candidate in required_paths)
+
+
+def discover_vlm2vec_root(
+    preferred_root: Optional[str] = None,
+    env: Optional[Dict[str, str]] = None,
+    search_roots: Optional[Iterable[str]] = None,
+) -> Optional[str]:
+    env = os.environ if env is None else env
+    candidates: List[str] = []
+
+    for value in [preferred_root, env.get("VLM2VEC_ROOT")]:
+        if value not in [None, ""]:
+            candidates.append(value)
+
+    if search_roots is None:
+        script_dir = Path(__file__).resolve().parent
+        repo_root = script_dir.parents[1]
+        search_roots = [
+            str(repo_root.parent / "VLM2Vec"),
+            str(repo_root.parent / "vlm2vec"),
+            str(Path.cwd() / "VLM2Vec"),
+            str(Path.cwd() / "vlm2vec"),
+        ]
+
+    candidates.extend(str(value) for value in search_roots if value not in [None, ""])
+
+    seen = set()
+    for candidate in candidates:
+        normalized = str(Path(candidate).expanduser().resolve())
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        if is_vlm2vec_root(normalized):
+            return normalized
+    return None
 
 
 def load_vlm2vec_context(vlm2vec_root: str) -> Dict[str, Any]:
