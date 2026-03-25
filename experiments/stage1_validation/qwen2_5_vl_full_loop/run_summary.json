@@ -4,7 +4,7 @@
   "python_executable": "/tmp/nexus_stage1_tf457_env/bin/python",
   "transformers_version": "4.57.3",
   "physical_gpu_used": "2",
-  "model_name_or_path": "/tmp/qwen2_5vl3b_instruct_local",
+  "model_name_or_path": "/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local",
   "model_type": "qwen2_5_vl",
   "base_load_check": {
     "processor_class": "Qwen2_5_VLProcessor",

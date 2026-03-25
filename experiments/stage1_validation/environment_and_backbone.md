@@ -23,9 +23,9 @@
 
 本地离线路径：
 
-- `/tmp/qwen2vl2b_local`
-- `/tmp/qwen2_5vl3b_instruct_local`
-- `/tmp/qwen3vl2b_instruct_local`
+- `/home/szn/zhangx/model_weights/qwen2vl2b_local`
+- `/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local`
+- `/home/szn/zhangx/model_weights/qwen3vl2b_instruct_local`
 
 围绕这个 backbone，已经真实完成：
 

@@ -1,6 +1,6 @@
 {
-  "embedder_name_or_path": "/tmp/qwen2_5vl3b_instruct_local",
-  "processor_name_or_path": "/tmp/qwen2_5vl3b_instruct_local",
+  "embedder_name_or_path": "/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local",
+  "processor_name_or_path": "/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local",
   "model_type": "qwen2_5_vl",
   "normalize_embeddings": true,
   "pooling_method": "last_token",

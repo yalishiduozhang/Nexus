@@ -142,7 +142,7 @@
 
 已完成：
 
-- 本地离线下载并校验 `Qwen/Qwen2-VL-2B-Instruct` 到 `/tmp/qwen2vl2b_local`
+- 本地离线下载并校验 `Qwen/Qwen2-VL-2B-Instruct` 到 `/home/szn/zhangx/model_weights/qwen2vl2b_local`
 - 修复真实 smoke 训练过程中暴露出的兼容性问题：
   - `Accelerator.unwrap_model(..., keep_torch_compile=...)` 兼容补丁
   - 多模态 `media_root` / `image_root` / `video_root` 解析修复
@@ -295,7 +295,7 @@
 已完成：
 
 - 下载并本地化 `Qwen/Qwen3-VL-2B-Instruct` 到：
-  - `/tmp/qwen3vl2b_instruct_local`
+  - `/home/szn/zhangx/model_weights/qwen3vl2b_instruct_local`
 - 在隔离环境 `/tmp/nexus_stage1_tf457_env` 中完成：
   - `qwen3_vl` base toy eval
   - `qwen3_vl` one-step LoRA smoke 训练
@@ -335,7 +335,7 @@
 已完成：
 
 - 下载并本地化公开 tiny checkpoint：
-  - `/tmp/tiny_random_llava_next_mistral_local`
+  - `/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local`
 - 真实完成 `llava_next` 全流程 smoke：
   - base load check
   - base toy eval

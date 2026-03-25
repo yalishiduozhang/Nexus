@@ -1,6 +1,6 @@
 {
   "base_model": {
-    "model_path": "/tmp/qwen2vl2b_local",
+    "model_path": "/home/szn/zhangx/model_weights/qwen2vl2b_local",
     "single_device": "cuda:0",
     "query_shape": [
       4,

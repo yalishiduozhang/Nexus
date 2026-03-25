@@ -1,6 +1,6 @@
 {
   "base_model": {
-    "model_path": "/tmp/tiny_random_llava_next_mistral_local",
+    "model_path": "/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local",
     "single_device": "cuda:0",
     "query_shape": [
       4,

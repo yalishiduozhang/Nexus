@@ -76,7 +76,7 @@
 
 使用：
 
-- 基础模型：`/tmp/qwen2vl2b_local`
+- 基础模型：`/home/szn/zhangx/model_weights/qwen2vl2b_local`
 - LoRA 输出：`/tmp/nexus_mm_smoke_train`
 
 已完成：

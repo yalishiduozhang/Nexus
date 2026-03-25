@@ -47,7 +47,7 @@
 ### 2.2 主要临时模型 / 输出目录
 
 - 基础 backbone：
-  - `/tmp/qwen2vl2b_local`
+  - `/home/szn/zhangx/model_weights/qwen2vl2b_local`
 - 最早的 LoRA smoke 训练输出：
   - `/tmp/nexus_mm_smoke_train`
 - 配置化训练 smoke 输出：
@@ -228,7 +228,7 @@ bash tools/multimodal_retrieval/validate_stack.sh
 ### 2. 运行资产
 
 - 模型：
-  - `/tmp/qwen2vl2b_local`
+  - `/home/szn/zhangx/model_weights/qwen2vl2b_local`
 - 数据：
   - `examples/multimodal_retrieval/data/media/`
   - `examples/multimodal_retrieval/data/eval/`
@@ -382,7 +382,7 @@ LoRA 输出 toy eval：
 关键参数摘要：
 
 - backbone：
-  - `/tmp/qwen2vl2b_local`
+  - `/home/szn/zhangx/model_weights/qwen2vl2b_local`
 - `model_type`：
   - `qwen2_vl`
 - LoRA：
@@ -872,7 +872,7 @@ tools/multimodal_retrieval/validate_backbone_matrix.py \
 ### 2. 实验环境
 
 - 模型：
-  - `/tmp/qwen3vl2b_instruct_local`
+  - `/home/szn/zhangx/model_weights/qwen3vl2b_instruct_local`
 - Python：
   - `/tmp/nexus_stage1_tf457_env/bin/python`
 - `transformers`：
@@ -930,7 +930,7 @@ PYTHONPATH=/home/szn/zhangx/explore/Nexus \
 关键配置：
 
 - `model_name_or_path`：
-  - `/tmp/qwen3vl2b_instruct_local`
+  - `/home/szn/zhangx/model_weights/qwen3vl2b_instruct_local`
 - `model_type`：
   - `qwen3_vl`
 - LoRA：
@@ -1008,7 +1008,7 @@ CUDA_VISIBLE_DEVICES=2 \
 PYTHONPATH=/home/szn/zhangx/explore/Nexus \
 /tmp/nexus_stage1_tf457_env/bin/python \
 tools/multimodal_retrieval/runtime_validation.py \
-  --base-model-path /tmp/qwen3vl2b_instruct_local \
+  --base-model-path /home/szn/zhangx/model_weights/qwen3vl2b_instruct_local \
   --adapter-model-path /tmp/nexus_stage1_qwen3_config_train \
   --model-type qwen3_vl \
   --single-device cuda:0 \
@@ -1178,8 +1178,8 @@ bash tools/multimodal_retrieval/validate_stack.sh
 ```bash
 CUDA_VISIBLE_DEVICES=2 \
 PYTHONPATH=/home/szn/zhangx/explore/Nexus \
-MODEL_NAME_OR_PATH=/tmp/qwen3vl2b_instruct_local \
-PROCESSOR_NAME_OR_PATH=/tmp/qwen3vl2b_instruct_local \
+MODEL_NAME_OR_PATH=/home/szn/zhangx/model_weights/qwen3vl2b_instruct_local \
+PROCESSOR_NAME_OR_PATH=/home/szn/zhangx/model_weights/qwen3vl2b_instruct_local \
 MODEL_TYPE=qwen3_vl \
 /tmp/nexus_stage1_tf457_env/bin/python \
 /home/szn/zhangx/explore/Nexus/examples/multimodal_retrieval/inference/inference_multimodal_embedder.py
@@ -1197,8 +1197,8 @@ tensor([[0.9532, 0.9368],
 ```bash
 CUDA_VISIBLE_DEVICES=2 \
 PYTHONPATH=/home/szn/zhangx/explore/Nexus \
-MODEL_NAME_OR_PATH=/tmp/qwen3vl2b_instruct_local \
-PROCESSOR_NAME_OR_PATH=/tmp/qwen3vl2b_instruct_local \
+MODEL_NAME_OR_PATH=/home/szn/zhangx/model_weights/qwen3vl2b_instruct_local \
+PROCESSOR_NAME_OR_PATH=/home/szn/zhangx/model_weights/qwen3vl2b_instruct_local \
 MODEL_TYPE=qwen3_vl \
 /tmp/nexus_stage1_tf457_env/bin/python \
 /home/szn/zhangx/explore/Nexus/examples/multimodal_retrieval/inference/encode_demo.py
@@ -1315,7 +1315,7 @@ scores: [[0.9630636 0.952819 ]]
 ### 2. 实验环境
 
 - 模型：
-  - `/tmp/qwen2_5vl3b_instruct_local`
+  - `/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local`
 - Python：
   - `/tmp/nexus_stage1_tf457_env/bin/python`
 - `transformers`：
@@ -1330,9 +1330,9 @@ scores: [[0.9630636 0.952819 ]]
 ```bash
 /tmp/nexus_stage1_tf457_env/bin/python -c "
 from transformers import AutoConfig, AutoProcessor, Qwen2_5_VLForConditionalGeneration
-cfg=AutoConfig.from_pretrained('/tmp/qwen2_5vl3b_instruct_local')
-proc=AutoProcessor.from_pretrained('/tmp/qwen2_5vl3b_instruct_local', trust_remote_code=True)
-model=Qwen2_5_VLForConditionalGeneration.from_pretrained('/tmp/qwen2_5vl3b_instruct_local', trust_remote_code=True, torch_dtype='auto')
+cfg=AutoConfig.from_pretrained('/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local')
+proc=AutoProcessor.from_pretrained('/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local', trust_remote_code=True)
+model=Qwen2_5_VLForConditionalGeneration.from_pretrained('/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local', trust_remote_code=True, torch_dtype='auto')
 print(type(proc).__name__)
 print(type(model).__name__)
 print(cfg.model_type)
@@ -1395,7 +1395,7 @@ PYTHONPATH=/home/szn/zhangx/explore/Nexus \
 关键配置：
 
 - `model_name_or_path`：
-  - `/tmp/qwen2_5vl3b_instruct_local`
+  - `/home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local`
 - `model_type`：
   - `qwen2_5_vl`
 - LoRA：
@@ -1473,7 +1473,7 @@ CUDA_VISIBLE_DEVICES=2 \
 PYTHONPATH=/home/szn/zhangx/explore/Nexus \
 /tmp/nexus_stage1_tf457_env/bin/python \
 tools/multimodal_retrieval/runtime_validation.py \
-  --base-model-path /tmp/qwen2_5vl3b_instruct_local \
+  --base-model-path /home/szn/zhangx/model_weights/qwen2_5vl3b_instruct_local \
   --adapter-model-path /tmp/nexus_stage1_qwen2_5_config_train \
   --model-type qwen2_5_vl \
   --single-device cuda:0 \
@@ -1679,7 +1679,7 @@ PY
 
 本地路径：
 
-- `/tmp/tiny_random_llava_next_mistral_local`
+- `/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local`
 
 配置文件：
 
@@ -1801,7 +1801,7 @@ PYTHONPATH=/home/szn/zhangx/explore/Nexus \
 ### 2. 输入资产
 
 - base model：
-  - `/tmp/tiny_random_llava_next_mistral_local`
+  - `/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local`
 - adapter model：
   - `/tmp/nexus_stage1_llava_next_config_train`
 
@@ -1812,7 +1812,7 @@ CUDA_VISIBLE_DEVICES=2 \
 PYTHONPATH=/home/szn/zhangx/explore/Nexus \
 /tmp/nexus_stage1_tf457_env/bin/python \
 tools/multimodal_retrieval/runtime_validation.py \
-  --base-model-path /tmp/tiny_random_llava_next_mistral_local \
+  --base-model-path /home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local \
   --adapter-model-path /tmp/nexus_stage1_llava_next_config_train \
   --model-type llava_next \
   --single-device cuda:0 \

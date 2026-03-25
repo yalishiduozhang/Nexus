@@ -1,6 +1,6 @@
 {
-  "model_name_or_path": "/tmp/tiny_random_llava_next_mistral_local",
-  "processor_name_or_path": "/tmp/tiny_random_llava_next_mistral_local",
+  "model_name_or_path": "/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local",
+  "processor_name_or_path": "/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local",
   "model_type": "llava_next",
   "cache_dir": null,
   "trust_remote_code": true,

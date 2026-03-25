@@ -179,7 +179,7 @@
 
 使用 backbone：
 
-- `/tmp/qwen2vl2b_local`
+- `/home/szn/zhangx/model_weights/qwen2vl2b_local`
 
 已真实完成：
 

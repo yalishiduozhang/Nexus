@@ -4,7 +4,7 @@
   "python_executable": "/tmp/nexus_stage1_tf457_env/bin/python",
   "transformers_version": "4.57.3",
   "physical_gpu_used": "2",
-  "model_name_or_path": "/tmp/tiny_random_llava_next_mistral_local",
+  "model_name_or_path": "/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local",
   "model_type": "llava_next",
   "validation_purpose": "family_full_loop_smoke",
   "checkpoint_note": "本实验使用公开 tiny checkpoint `optimum-internal-testing/tiny-random-llava-next-mistral` 验证 Llava-Next family 的工程闭环，不作为性能候选 backbone。",

@@ -1,6 +1,6 @@
 {
-  "embedder_name_or_path": "/tmp/tiny_random_llava_next_mistral_local",
-  "processor_name_or_path": "/tmp/tiny_random_llava_next_mistral_local",
+  "embedder_name_or_path": "/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local",
+  "processor_name_or_path": "/home/szn/zhangx/model_weights/tiny_random_llava_next_mistral_local",
   "model_type": "llava_next",
   "normalize_embeddings": true,
   "pooling_method": "last_token",

@@ -137,8 +137,8 @@ HF_DATASETS_CACHE=/tmp/hf_nexus_smoke/datasets \
 HF_HUB_OFFLINE=1 \
 TRANSFORMERS_OFFLINE=1 \
 /home/szn/zht/miniconda3/envs/costa/bin/python -m Nexus.training.embedder.multimodal_retrieval \
-  --model_name_or_path /tmp/qwen2vl2b_local \
-  --processor_name_or_path /tmp/qwen2vl2b_local \
+  --model_name_or_path /home/szn/zhangx/model_weights/qwen2vl2b_local \
+  --processor_name_or_path /home/szn/zhangx/model_weights/qwen2vl2b_local \
   --model_type qwen2_vl \
   --torch_dtype bfloat16 \
   --use_chat_template True \
