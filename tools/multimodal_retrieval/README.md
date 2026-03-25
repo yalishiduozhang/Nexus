@@ -129,6 +129,28 @@ python tools/multimodal_retrieval/prepare_mmeb_v2_train_data.py \
   --write-stage-configs-dir /path/to/data/nexus/configs
 ```
 
+### `prepare_mmeb_v2_eval_data.py`
+
+Batch-convert MMEB v2 eval subsets from a local raw-data mirror into the Nexus local-eval layout and emit per-dataset `eval_config.json` files:
+
+```bash
+python tools/multimodal_retrieval/prepare_mmeb_v2_eval_data.py \
+  --manifest docs/multimodal_retrieval/MMEB_v2_manifest.json \
+  --raw-root /path/to/data/raw \
+  --output-root /path/to/data/nexus/eval_ready \
+  --datasets HatefulMemes MSVD \
+  --write-eval-configs-dir /path/to/data/nexus/eval_configs \
+  --allow-missing \
+  --local-only
+```
+
+This script understands both:
+
+- VLM2Vec-style local mirrors such as `image-tasks/`, `video-tasks/`, and `visdoc-tasks/`
+- repo-cache layouts under `raw-root/vlm2vec_eval/`
+
+For video datasets it prefers `frame_root` as the effective `image_root`, which matches how VLM2Vec eval loaders consume frame sequences during retrieval evaluation.
+
 ### `check_idle_gpus.py`
 
 Inspect shared GPUs before starting training:

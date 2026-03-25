@@ -124,6 +124,56 @@ Candidate ablations:
 - Before any run, inspect GPU occupancy and select only idle devices.
 - Keep `CUDA_VISIBLE_DEVICES` explicit in training scripts.
 
+## Validated Smoke Command
+
+The local Nexus stack has already passed a one-step offline smoke finetune with a fully local `Qwen/Qwen2-VL-2B-Instruct` backbone copy.
+
+Reference command:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+HF_HOME=/tmp/hf_nexus_smoke \
+HF_DATASETS_CACHE=/tmp/hf_nexus_smoke/datasets \
+HF_HUB_OFFLINE=1 \
+TRANSFORMERS_OFFLINE=1 \
+/home/szn/zht/miniconda3/envs/costa/bin/python -m Nexus.training.embedder.multimodal_retrieval \
+  --model_name_or_path /tmp/qwen2vl2b_local \
+  --processor_name_or_path /tmp/qwen2vl2b_local \
+  --model_type qwen2_vl \
+  --torch_dtype bfloat16 \
+  --use_chat_template True \
+  --use_lora True \
+  --lora_r 8 \
+  --lora_alpha 16 \
+  --lora_dropout 0.05 \
+  --train_data examples/multimodal_retrieval/data/train.jsonl \
+  --media_root examples/multimodal_retrieval/data/media \
+  --output_dir /tmp/nexus_mm_smoke_train \
+  --overwrite_output_dir \
+  --do_train \
+  --per_device_train_batch_size 1 \
+  --gradient_accumulation_steps 1 \
+  --learning_rate 1e-5 \
+  --max_steps 1 \
+  --train_group_size 2 \
+  --query_max_len 256 \
+  --passage_max_len 256 \
+  --temperature 0.02 \
+  --sentence_pooling_method last_token \
+  --normalize_embeddings True \
+  --remove_unused_columns False \
+  --dataloader_drop_last False \
+  --report_to none \
+  --logging_steps 1 \
+  --save_strategy no \
+  --bf16
+```
+
+Observed smoke result:
+
+- `max_steps=1` completed successfully
+- `train_loss = 0.474609375`
+
 ## Exit Criteria For Stage 2
 
 - one isolated environment recipe

@@ -37,26 +37,27 @@ Done:
   - `hf_dataset_manager.py`
   - `prepare_public_data.py`
   - `prepare_mmeb_v2_train_data.py`
+- Added manifest-driven MMEB v2 eval batch-preparation tooling:
+  - `prepare_mmeb_v2_eval_data.py`
+  - per-dataset `eval_config.json` emission
+  - validation coverage in `validate_stack.sh`
 - Regenerated the machine-readable MMEB v2 manifest so it now records separate metadata/media sources and train download patterns.
 - Verified one real public-data smoke path by downloading and converting the `HatefulMemes` MMEB-train subset into Nexus JSONL.
+- Verified the new eval-prep path in dry-run mode on representative image, video, and visdoc MMEB datasets.
+- Downloaded a fully local `Qwen/Qwen2-VL-2B-Instruct` backbone copy for offline smoke runs.
+- Verified a one-step offline LoRA smoke finetune on an idle single GPU with the local Qwen2-VL backbone and bundled multimodal example data.
 
 In progress:
 
-- Hardening the multimodal stack for MMEB v2 readiness.
-- Closing gaps discovered in review:
-  - raw video path support
-  - Qwen3-VL model-type compatibility
-  - evaluation media root overrides
-  - multi-device embedding inference
-- Building reusable data tooling so MMEB/VLM2Vec style data can be converted into Nexus-native formats.
-- Converting the public-data tooling from checklist-level docs into executable manifest-driven workflows.
-- Preparing staged Nexus `data_config.json` assets from converted public train sources.
+- Turning selective public-data collection from one-source smoke coverage into a broader staged mixture.
+- Preparing stage-specific train and eval configs for subset runs once the local backbone smoke train is confirmed.
+- Preparing the first broader Stage A data mixture and subset evaluation bundle now that backbone-level smoke training is validated.
 
 Not started yet:
 
-- environment-specific GPU training runs
+- broader environment-specific GPU training runs
 - storage-managed large-scale data download and curation
-- model training and leaderboard verification
+- model training and leaderboard verification against MMEB v2
 
 ## Milestones
 
@@ -72,7 +73,7 @@ Scope:
 
 ### M1: MMEB v2 readiness pass
 
-Status: in progress
+Status: completed
 
 Scope:
 
@@ -90,7 +91,7 @@ Exit criteria:
 
 ### M2: Data tooling and public data inventory
 
-Status: in progress
+Status: completed
 
 Scope:
 
@@ -106,7 +107,7 @@ Exit criteria:
 
 ### M3: Training recipe
 
-Status: pending
+Status: in progress
 
 Scope:
 
@@ -139,11 +140,11 @@ Exit criteria:
 
 ## Immediate Next Steps
 
-1. Keep the generated manifest and inventory docs in sync with the actual helper tools.
-2. Expand the real public-data smoke run from one MMEB image subset to a broader Stage A mixture.
-3. Prepare isolated training environments instead of modifying the local base environment.
-4. Launch a smoke finetune only after selecting idle GPUs explicitly.
-5. Move from smoke conversion into staged local evaluation and per-modality error analysis.
+1. Expand the real public-data smoke run from one MMEB image subset to a broader Stage A mixture.
+2. Use the new `prepare_mmeb_v2_eval_data.py` path to prepare small image/video/visdoc eval subsets for local iteration.
+3. Convert those subset runs into reusable stage configs and local benchmark commands.
+4. Start the first non-trivial LoRA training run after staging more than the bundled toy example.
+5. Move from smoke validation into per-modality error analysis and dataset-mixture iteration.
 
 ## Risks And Dependencies
 
@@ -151,6 +152,7 @@ Exit criteria:
 - MMEB v2 data spans image, video, and visual-document tasks, so storage layout and media roots must stay configurable.
 - Video evaluation can be expensive and must not interfere with other users' jobs on shared GPUs.
 - Full public data collection is storage-heavy relative to the current machine, so selective download remains necessary until a larger storage target is prepared.
+- Python-level HF SDK networking remains unreliable inside the sandbox, so local cache reuse or unsandboxed shell download is still required for heavyweight artifacts.
 - Final leaderboard claims depend on real training runs and benchmark execution, which are not yet completed in this repository.
 
 ## Working Rules

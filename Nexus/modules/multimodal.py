@@ -141,7 +141,34 @@ def resolve_media_path(path: str, base_dir: Optional[Any] = None, media_type: st
     selected_base_dir = _select_media_base_dir(base_dir, media_type=media_type)
     if os.path.isabs(path) or selected_base_dir is None or looks_like_remote_reference(path):
         return path
-    return os.path.normpath(os.path.join(selected_base_dir, path))
+
+    resolved_path = os.path.normpath(os.path.join(selected_base_dir, path))
+    if os.path.exists(resolved_path):
+        return resolved_path
+
+    normalized_base_dir = os.path.normpath(selected_base_dir)
+    normalized_path = os.path.normpath(path)
+    base_name = os.path.basename(normalized_base_dir)
+    path_parts = normalized_path.split(os.sep)
+    if len(path_parts) > 1 and path_parts[0] == base_name:
+        fallback_path = os.path.normpath(os.path.join(os.path.dirname(normalized_base_dir), normalized_path))
+        if os.path.exists(fallback_path):
+            return fallback_path
+
+    return resolved_path
+
+
+def resolve_root_override_path(path: Optional[str], default_root: Optional[str], media_type: str) -> Optional[str]:
+    if path in [None, ""]:
+        return None
+    if os.path.isabs(path) or looks_like_remote_reference(path):
+        return path
+
+    cwd_candidate = os.path.normpath(path)
+    if os.path.exists(cwd_candidate):
+        return os.path.abspath(cwd_candidate)
+
+    return resolve_media_path(path, base_dir=default_root, media_type=media_type)
 
 
 def looks_like_image_reference(path: Optional[str]) -> bool:
@@ -176,15 +203,27 @@ def build_media_base_dir(
         normalized_base_dir.setdefault("base_dir", default_root)
 
     if media_root not in [None, ""]:
-        normalized_base_dir["media"] = resolve_media_path(media_root, base_dir=default_root, media_type="media")
+        normalized_base_dir["media"] = resolve_root_override_path(
+            media_root,
+            default_root=default_root,
+            media_type="media",
+        )
 
     if image_root not in [None, ""]:
-        normalized_base_dir["image"] = resolve_media_path(image_root, base_dir=default_root, media_type="image")
+        normalized_base_dir["image"] = resolve_root_override_path(
+            image_root,
+            default_root=default_root,
+            media_type="image",
+        )
     elif normalized_base_dir.get("media") not in [None, ""] and normalized_base_dir.get("image") in [None, ""]:
         normalized_base_dir["image"] = normalized_base_dir["media"]
 
     if video_root not in [None, ""]:
-        normalized_base_dir["video"] = resolve_media_path(video_root, base_dir=default_root, media_type="video")
+        normalized_base_dir["video"] = resolve_root_override_path(
+            video_root,
+            default_root=default_root,
+            media_type="video",
+        )
     elif normalized_base_dir.get("media") not in [None, ""] and normalized_base_dir.get("video") in [None, ""]:
         normalized_base_dir["video"] = normalized_base_dir["media"]
 
@@ -688,6 +727,36 @@ class MultimodalProcessorAdapter:
                 fallback_text = self._build_chat_text(item=item, images=fallback_images, videos=[])
             return self.processor(**_build_processor_kwargs(fallback_text, fallback_images, []))
 
+    @staticmethod
+    def _strip_singleton_batch(value: Any) -> Any:
+        if isinstance(value, list) and len(value) == 1 and isinstance(value[0], list):
+            return value[0]
+        return value
+
+    def _batch_with_tokenizer_pad(self, encoded_items: List[Dict[str, Any]]) -> Dict[str, Any]:
+        tokenizer = getattr(self.processor, "tokenizer", None)
+        if tokenizer is None:
+            raise ValueError(
+                "Current processor does not provide a `pad` method or a tokenizer. "
+                "Please use a processor with padding support."
+            )
+
+        tokenizer_features = []
+        for item in encoded_items:
+            feature = {}
+            for key in ["input_ids", "attention_mask", "token_type_ids"]:
+                if key in item:
+                    feature[key] = self._strip_singleton_batch(item[key])
+            tokenizer_features.append(feature)
+
+        batch = tokenizer.pad(tokenizer_features, padding=True, return_tensors="pt")
+        for key in ["pixel_values", "image_grid_thw", "pixel_values_videos", "video_grid_thw"]:
+            values = [item[key] for item in encoded_items if item.get(key) is not None]
+            if len(values) == 0:
+                continue
+            batch[key] = torch.cat([torch.as_tensor(value) for value in values], dim=0)
+        return batch
+
     def encode_batch(
         self,
         items: Iterable[Dict[str, Any]],
@@ -710,11 +779,4 @@ class MultimodalProcessorAdapter:
         pad_fn = getattr(self.processor, "pad", None)
         if callable(pad_fn):
             return pad_fn(encoded_items, padding=True, return_tensors="pt")
-
-        tokenizer = getattr(self.processor, "tokenizer", None)
-        if tokenizer is None:
-            raise ValueError(
-                "Current processor does not provide a `pad` method or a tokenizer. "
-                "Please use a processor with padding support."
-            )
-        return tokenizer.pad(encoded_items, padding=True, return_tensors="pt")
+        return self._batch_with_tokenizer_pad(encoded_items)

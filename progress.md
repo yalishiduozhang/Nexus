@@ -130,3 +130,59 @@
 - Python-level Hugging Face access inside the sandbox still fails for SDK-style networking, so actual public-data download in this environment requires unsandboxed execution.
 - Full public data collection still exceeds the free disk currently available on this machine, so selective download remains the only safe local path right now.
 - A real `Qwen/Qwen2-VL-2B-Instruct` smoke inference attempt was started on idle GPU `2`, but it was stopped after stalling in backbone download. No completed backbone-level run is available yet.
+
+### Additional eval-prep work completed later in this round
+
+- Added manifest-driven MMEB v2 eval batch conversion:
+  - `tools/multimodal_retrieval/prepare_mmeb_v2_eval_data.py`
+- Added regression coverage for:
+  - local image-task eval source resolution
+  - video frame-root preference in eval configs
+  - remote fallback command generation
+  - single-dataset eval config emission
+- Updated:
+  - `tools/multimodal_retrieval/README.md`
+  - `tools/multimodal_retrieval/validate_stack.sh`
+
+### Validation completed after the eval-prep addition
+
+- `pytest tests/multimodal_retrieval -q` now passes with 22 tests.
+- `prepare_mmeb_v2_eval_data.py` dry-run succeeds on representative MMEB datasets:
+  - `HatefulMemes`
+  - `MSVD`
+  - `ViDoRe_arxivqa`
+- `tools/multimodal_retrieval/validate_stack.sh` now covers the eval-prep dry-run and passes end to end.
+
+### Current live execution state
+
+- Local download of `Qwen/Qwen2-VL-2B-Instruct` to `/tmp/qwen2vl2b_local` completed successfully.
+- Verified both weight shards against `model.safetensors.index.json` and switched smoke runs fully offline.
+
+### Backbone smoke-training fixes completed
+
+- Added a compatibility patch so Nexus training remains usable with the current local `transformers==4.52.3` and `accelerate==0.29.1` pair:
+  - patched `Accelerator.unwrap_model(..., keep_torch_compile=...)` compatibility in `Nexus/abc/training/trainer.py`
+- Fixed multimodal root resolution so explicit `media_root` / `image_root` / `video_root` overrides can use existing cwd-relative paths without being re-joined onto dataset-file directories.
+- Fixed the Qwen2-VL visual batching path when the processor lacks a native `.pad()` method:
+  - text fields are padded with the tokenizer
+  - visual tensors and `*_grid_thw` values are concatenated explicitly
+- Regenerated the bundled example PPM media to `32x32` so Qwen2-VL image preprocessing accepts the smoke inputs.
+- Simplified the bundled train JSONL media paths to match the configured `media_root`.
+
+### Smoke-training validation completed
+
+- Re-ran the multimodal smoke finetune fully offline on an explicitly idle single GPU (`CUDA_VISIBLE_DEVICES=0`).
+- Command target:
+  - local model: `/tmp/qwen2vl2b_local`
+  - train data: `examples/multimodal_retrieval/data/train.jsonl`
+  - output: `/tmp/nexus_mm_smoke_train`
+- Result:
+  - `max_steps=1` completed successfully
+  - reported `train_loss`: `0.474609375`
+  - training artifacts were written successfully after the LoRA save path completed
+
+### Next execution target
+
+- Expand public train-data smoke coverage beyond `HatefulMemes`.
+- Prepare the first reusable local eval subset bundle from the manifest-driven eval-prep tooling.
+- Move from bundled example smoke data to a small real multimodal mixture for the next LoRA run.

@@ -32,6 +32,7 @@ echo "[1/4] py_compile"
   "${REPO_ROOT}/tools/multimodal_retrieval/export_mmeb_v2_inventory.py" \
   "${REPO_ROOT}/tools/multimodal_retrieval/export_mmeb_v2_manifest.py" \
   "${REPO_ROOT}/tools/multimodal_retrieval/hf_dataset_manager.py" \
+  "${REPO_ROOT}/tools/multimodal_retrieval/prepare_mmeb_v2_eval_data.py" \
   "${REPO_ROOT}/tools/multimodal_retrieval/prepare_mmeb_v2_train_data.py" \
   "${REPO_ROOT}/tools/multimodal_retrieval/prepare_public_data.py" \
   "${REPO_ROOT}/tools/multimodal_retrieval/vlm2vec_manifest_lib.py" \
@@ -70,5 +71,14 @@ EOF
   --sequence-mode image \
   --dataset-name toy_eval \
   --output-dir "${TMP_ROOT}/converted_eval"
+
+"${PYTHON_BIN}" tools/multimodal_retrieval/prepare_mmeb_v2_eval_data.py \
+  --manifest "${REPO_ROOT}/docs/multimodal_retrieval/MMEB_v2_manifest.json" \
+  --raw-root "${TMP_ROOT}/raw_eval" \
+  --output-root "${TMP_ROOT}/prepared_eval" \
+  --datasets HatefulMemes MSVD \
+  --write-eval-configs-dir "${TMP_ROOT}/prepared_eval_configs" \
+  --allow-missing \
+  --dry-run
 
 echo "Validation completed successfully."

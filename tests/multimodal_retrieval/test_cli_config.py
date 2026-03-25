@@ -1,4 +1,5 @@
 import json
+import inspect
 from pathlib import Path
 import sys
 
@@ -85,3 +86,11 @@ def test_eval_cli_accepts_json_configs_without_onnx(tmp_path):
 
     assert eval_args.eval_name == "toy_eval"
     assert model_args.embedder_name_or_path == "Qwen/Qwen2-VL-2B-Instruct"
+
+
+def test_training_import_patches_accelerate_unwrap_model_signature():
+    from accelerate import Accelerator
+
+    signature = inspect.signature(Accelerator.unwrap_model)
+
+    assert "keep_torch_compile" in signature.parameters

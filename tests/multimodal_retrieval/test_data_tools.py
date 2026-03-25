@@ -40,6 +40,10 @@ prepare_train_tool = load_module_from_path(
     "prepare_mmeb_v2_train_data",
     "tools/multimodal_retrieval/prepare_mmeb_v2_train_data.py",
 )
+prepare_eval_tool = load_module_from_path(
+    "prepare_mmeb_v2_eval_data",
+    "tools/multimodal_retrieval/prepare_mmeb_v2_eval_data.py",
+)
 gpu_tool = load_module_from_path(
     "check_idle_gpus",
     "tools/multimodal_retrieval/check_idle_gpus.py",
@@ -266,6 +270,123 @@ def test_prepare_public_data_augment_source_for_legacy_manifest():
 
     assert selected[0]["metadata_hf_repo"] == manifest_lib.MMEB_TRAIN_REPO
     assert selected[0]["download_patterns"] == ["VOC2007/original-*", "images_zip/VOC2007.zip"]
+
+
+def test_prepare_eval_source_resolves_local_image_task(tmp_path):
+    raw_root = tmp_path / "raw"
+    metadata_dir = raw_root / "vlm2vec_eval" / "metadata" / "ziyjiang--MMEB_Test_Instruct" / "HatefulMemes"
+    metadata_dir.mkdir(parents=True)
+    (metadata_dir / "test.jsonl").write_text("{}\n", encoding="utf-8")
+    image_root = raw_root / "image-tasks"
+    image_root.mkdir(parents=True)
+
+    entry = {
+        "dataset_key": "HatefulMemes",
+        "modality": "image",
+        "metadata_hf_repo": "ziyjiang/MMEB_Test_Instruct",
+        "metadata_hf_subset": "HatefulMemes",
+        "metadata_hf_split": "test",
+        "media_hf_repo": "TIGER-Lab/MMEB-V2",
+        "media_rel_root": "image-tasks/",
+        "local_repo": "image-tasks",
+        "local_subset": "HatefulMemes",
+        "local_split": "test",
+        "config": {"image_root": "image-tasks/"},
+    }
+
+    resolved = prepare_eval_tool.resolve_eval_source(entry, raw_root)
+
+    assert resolved["input"] == str(metadata_dir)
+    assert resolved["is_local"] is True
+    assert resolved["image_root"] == str(image_root)
+    assert resolved["media_root"] == str(image_root)
+
+
+def test_prepare_eval_source_prefers_frame_root_for_video(tmp_path):
+    raw_root = tmp_path / "raw"
+    metadata_dir = raw_root / "vlm2vec_eval" / "metadata" / "VLM2Vec--MSVD"
+    metadata_dir.mkdir(parents=True)
+    (metadata_dir / "test.jsonl").write_text("{}\n", encoding="utf-8")
+    frame_root = raw_root / "video-tasks" / "frames" / "video_ret" / "MSVD"
+    frame_root.mkdir(parents=True)
+    video_root = raw_root / "video-tasks" / "videos" / "video_ret" / "MSVD"
+    video_root.mkdir(parents=True)
+
+    entry = {
+        "dataset_key": "MSVD",
+        "modality": "video",
+        "metadata_hf_repo": "VLM2Vec/MSVD",
+        "metadata_hf_subset": None,
+        "metadata_hf_split": "test",
+        "media_hf_repo": "TIGER-Lab/MMEB-V2",
+        "media_rel_root": "video-tasks/frames/video_ret/MSVD/",
+        "local_repo": "video-tasks/MSVD",
+        "local_subset": None,
+        "local_split": "test",
+        "config": {
+            "frame_root": "video-tasks/frames/video_ret/MSVD/",
+            "video_root": "video-tasks/videos/video_ret/MSVD/",
+        },
+    }
+
+    resolved = prepare_eval_tool.resolve_eval_source(entry, raw_root)
+
+    assert resolved["input"] == str(metadata_dir)
+    assert resolved["image_root"] == str(frame_root)
+    assert resolved["video_root"] == str(video_root)
+    assert resolved["media_root"] == str(frame_root)
+
+
+def test_build_eval_convert_command_uses_remote_repo_when_allowed(tmp_path):
+    args = types.SimpleNamespace(
+        python_bin="python",
+        cache_dir=str(tmp_path / "cache"),
+        max_rows_per_dataset=7,
+        local_only=False,
+    )
+    entry = {
+        "dataset_key": "ViDoRe_arxivqa",
+        "modality": "visdoc",
+        "metadata_hf_repo": "vidore/arxivqa_test_subsampled_beir",
+    }
+    resolved = {
+        "input": None,
+        "subset": None,
+        "split": "test",
+        "media_root": str(tmp_path / "raw"),
+        "image_root": str(tmp_path / "raw" / "visdoc-tasks" / "ViDoRe_arxivqa"),
+        "video_root": None,
+    }
+
+    command = prepare_eval_tool.build_convert_command(
+        entry=entry,
+        resolved=resolved,
+        output_dir=tmp_path / "out" / "ViDoRe_arxivqa",
+        args=args,
+    )
+
+    assert command[:4] == ["python", str(prepare_eval_tool.SCRIPT_DIR / "convert_vlm2vec_eval_to_nexus.py"), "--input", "vidore/arxivqa_test_subsampled_beir"]
+    assert "--sequence-mode" in command
+    assert "image" in command
+    assert "--max-rows" in command
+    assert "7" in command
+
+
+def test_build_eval_config_writes_single_dataset_config(tmp_path):
+    entry = {"dataset_key": "MSVD"}
+    resolved = {
+        "split": "test",
+        "media_root": str(tmp_path / "raw"),
+        "image_root": str(tmp_path / "raw" / "frames"),
+        "video_root": str(tmp_path / "raw" / "videos"),
+    }
+
+    config = prepare_eval_tool.build_eval_config(entry=entry, output_root=tmp_path / "eval_ready", resolved=resolved)
+
+    assert config["dataset_dir"] == str(tmp_path / "eval_ready")
+    assert config["dataset_names"] == ["MSVD"]
+    assert config["splits"] == ["test"]
+    assert config["image_root"] == str(tmp_path / "raw" / "frames")
 
 
 def test_check_idle_gpus_parses_csv_dump():
