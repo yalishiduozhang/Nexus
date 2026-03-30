@@ -43,6 +43,15 @@ python tools/multimodal_retrieval/convert_vlm2vec_eval_to_nexus.py \
   --output-dir converted_eval/MSR-VTT
 ```
 
+The converter now also understands legacy pair-style rows such as HatefulMemes-style records with fields like:
+
+- `qry`
+- `qry_image_path`
+- `pos_text`
+- `neg_text`
+
+This makes it possible to turn binary classification-style multimodal metadata into Nexus local-eval triples without writing a one-off conversion script.
+
 ### `export_mmeb_v2_inventory.py`
 
 Generate a markdown inventory from the local `VLM2Vec` references.
@@ -134,6 +143,34 @@ python tools/multimodal_retrieval/prepare_mmeb_v2_train_data.py \
   --write-stage-configs-dir /path/to/data/nexus/configs
 ```
 
+### `prepare_exploration_train_data.py`
+
+Build an exploration-oriented train JSONL at an exact target size before a smoke finetune:
+
+```bash
+python tools/multimodal_retrieval/prepare_exploration_train_data.py \
+  --input /path/to/data/nexus/train_ready \
+  --output /path/to/data/nexus/exploration/train_1000.jsonl \
+  --target-size 1000 \
+  --fill-mode repeat_to_target
+```
+
+This keeps the "expand to 1000 rows" step in data preparation instead of burying oversampling logic inside the training loop.
+
+### `repair_mmeb_train_media_paths.py`
+
+Rewrite converted Nexus train JSONL rows so their media paths match a real local image layout:
+
+```bash
+python tools/multimodal_retrieval/repair_mmeb_train_media_paths.py \
+  --input /path/to/data/nexus/train_ready/HatefulMemes.jsonl \
+  --output /path/to/data/nexus/train_ready_fixed/HatefulMemes.jsonl \
+  --image-root /path/to/local/MMEB/HatefulMemes \
+  --fail-on-unresolved
+```
+
+This is useful when converted metadata uses repo-style paths such as `images/HatefulMemes/Train/HatefulMemes_image_542.jpg`, but the locally extracted media lives under an archive layout such as `image_542.jpg`.
+
 ### `prepare_mmeb_v2_eval_data.py`
 
 Batch-convert MMEB v2 eval subsets from a local raw-data mirror into the Nexus local-eval layout and emit per-dataset `eval_config.json` files:
@@ -220,7 +257,7 @@ bash tools/multimodal_retrieval/download_public_data.sh
 Run syntax checks, multimodal tests, inventory export, and conversion smoke tests:
 
 ```bash
-PYTHON_BIN=/home/szn/zht/miniconda3/envs/costa/bin/python \
+PYTHON_BIN=/path/to/python \
 bash tools/multimodal_retrieval/validate_stack.sh
 ```
 
@@ -239,7 +276,7 @@ Validate whether the current environment can really instantiate and reload the b
 ```bash
 PYTHONPATH=/path/to/Nexus \
 python tools/multimodal_retrieval/validate_backbone_matrix.py \
-  --output-dir experiments/stage1_validation/backbone_matrix/current_env \
+  --output-dir /tmp/backbone_matrix/current_env \
   --label current_env
 ```
 
@@ -249,6 +286,19 @@ This script:
 - builds a tiny local checkpoint for each available family
 - runs the real `save_pretrained -> load_multimodal_backbone -> from_pretrained` path
 - writes both `report.json` and `summary.md`
+
+The current matrix includes:
+
+- `Qwen2-VL`
+- `Qwen2.5-VL`
+- `Qwen3-VL`
+- `Qwen3.5`
+- `Llava-Next`
+
+Related processor note:
+
+- `Qwen2-VL`, `Qwen2.5-VL`, `Qwen3-VL`, and `Qwen3.5` expose Qwen-style `min_pixels` / `max_pixels` overrides through `AutoProcessor`.
+- `Llava-Next` uses `size` / `crop_size` instead. Nexus now translates Qwen-style pixel budgets into `size` / `crop_size` when `model_type=llava_next`, while still respecting explicit `size` / `crop_size` overrides when they are provided.
 
 If you need to require every requested family to be present and load successfully, add:
 
@@ -263,4 +313,4 @@ python tools/multimodal_retrieval/validate_backbone_matrix.py \
 ## Environment
 
 Run these tools inside an isolated environment. Do not install dependencies into the local `base` environment.
-For the final Stage 2 competitive path, prefer a fresh environment that satisfies the multimodal extra requirements, especially if the chosen backbone moves from `Qwen2-VL` smoke validation to the `Qwen3-VL` family.
+For the final Stage 2 competitive path, prefer a fresh environment that satisfies the multimodal extra requirements, especially if the chosen backbone moves from `Qwen2-VL` smoke validation to the `Qwen3-VL` or `Qwen3.5` families.

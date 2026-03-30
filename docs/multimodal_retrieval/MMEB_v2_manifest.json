@@ -1,6 +1,6 @@
 {
   "source": "local_vlm2vec",
-  "vlm2vec_root": "/home/szn/zhangx/explore/VLM2Vec",
+  "vlm2vec_root": null,
   "eval": [
     {
       "modality": "image",

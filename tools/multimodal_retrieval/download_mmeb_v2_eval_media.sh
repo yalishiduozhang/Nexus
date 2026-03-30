@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-TARGET_ROOT="${1:-/storage/zhangx_data/MMEB-V2}"
+TARGET_ROOT="${1:-data/vlm2vec_eval/MMEB-V2}"
 LOG_DIR="${2:-$TARGET_ROOT/logs}"
 DOWNLOAD_LOG="$LOG_DIR/download.log"
 
